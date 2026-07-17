@@ -12,3 +12,7 @@ description: How to use the shared memory vault before and after every task.
    what was done, decisions made, open items, files touched.
 2. If a durable fact was learned (a preference, a decision, a location of
    something), update the matching file in projects/ or entities/.
+
+## If memory MCP tools are available
+Prefer them over grep: search_notes for retrieval, write_note for handoff
+notes and durable facts. Same vault, same files — just better retrieval.
