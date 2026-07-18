@@ -25,3 +25,8 @@ description: How to create repos, branches, commits, and PRs on GitHub for real 
   exists, say so explicitly rather than guessing.
 - If a task depends on code in an unmerged PR, do not branch from main —
   report the dependency and wait for the merge instead.
+- Before pushing "to a PR", verify the PR is still open:
+  gh pr view <num> --json state. If it merged while you worked, commits
+  pushed to its branch silently never reach main. Recovery: open a new PR
+  from the same branch (it contains just the delta commits). This happened
+  with pantry PR #3 → PR #5 on 2026-07-18.
