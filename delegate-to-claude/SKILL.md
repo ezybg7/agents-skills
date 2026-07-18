@@ -8,6 +8,11 @@ Multi-file code changes, deep research, tasks failed twice locally.
 ## Procedure
 1. Write full context to ~/agents/queue/<slug>.task (goal, constraints,
    file paths, relevant memory notes — Claude starts cold).
+   Optional header lines at the top of the task file (worker parses them):
+   - EFFORT:max — thinking-heavy tasks (specs, architecture, debugging)
+   - EFFORT:high — regular implementation tasks
+   - MODEL:<name> — override model (default: the user's saved default, fable)
+   Everett's standing rule: fable on max for thinking tasks, high for regular.
 2. Run ~/agents/scripts/claude-worker.sh with the terminal tool and wait.
 3. Read the newest claude-<slug>-*.json in ~/agents/logs/. Note its
    session_id field.
