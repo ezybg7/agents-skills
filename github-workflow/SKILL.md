@@ -16,3 +16,12 @@ description: How to create repos, branches, commits, and PRs on GitHub for real 
   with gh run view <id> --log-failed.
 - Large changes: follow delegate-to-claude, and include the repo path and
   branch name in the task file.
+
+## Reporting
+- Every delegated task that opens a PR must end Claude's output with a
+  final line of exactly: PR: <url>
+- Hermes: after the worker finishes, find that line in the result JSON
+  and post it to the Discord channel the task came from. If no PR line
+  exists, say so explicitly rather than guessing.
+- If a task depends on code in an unmerged PR, do not branch from main —
+  report the dependency and wait for the merge instead.
