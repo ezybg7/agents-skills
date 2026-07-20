@@ -9,10 +9,13 @@ Multi-file code changes, deep research, tasks failed twice locally.
 1. Write full context to ~/agents/queue/<slug>.task (goal, constraints,
    file paths, relevant memory notes — Claude starts cold).
    Optional header lines at the top of the task file (worker parses them):
-   - EFFORT:max — thinking-heavy tasks (specs, architecture, debugging)
-   - EFFORT:high — regular implementation tasks
-   - MODEL:<name> — override model (default: the user's saved default, fable)
-   Everett's standing rule: fable on max for thinking tasks, high for regular.
+   - EFFORT:max / EFFORT:high — reasoning effort
+   - MODEL:<name> — model override (no MODEL line = user default, fable)
+   Everett's standing MODEL ROUTING (2026-07-19): thinking-heavy tasks
+   (specs, design, architecture, debugging, audits, reviews) → EFFORT:max
+   alone (fable, the top model); regular implementation of already-specced
+   work → MODEL:opus + EFFORT:high (stretches the Max plan; Opus 4.8
+   executes well-scoped file plans excellently).
 2. STOP THERE. A launchd watcher (com.user.claude-worker, WatchPaths on
    ~/agents/queue) runs claude-worker.sh automatically within seconds.
    NEVER run the worker or `claude` manually — long tasks outlive the
