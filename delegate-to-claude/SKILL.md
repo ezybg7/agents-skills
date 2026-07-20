@@ -33,7 +33,21 @@ Multi-file code changes, deep research, tasks failed twice locally.
    for marker-named files first.)
 4. When a result is complete: summarize the outcome to daily-log/ and
    report back to the user, always including any line starting with "PR:".
-5. If the result is a QUESTION or a permission/blocker report: relay it
-   to the user verbatim. Then write a NEW task file whose FIRST LINE is
-   exactly "RESUME:<session_id>" followed by the user's answer — the
-   runner picks it up like any task and continues the same Claude session.
+5. If the result is a QUESTION or a blocker report, triage it first
+   (autonomy policy, 2026-07-20):
+   - OPERATIONAL asks (restart a service, apply a migration, reset/seed a
+     dev DB, install deps, rerun checks) → do NOT bounce these to the
+     user. Re-queue them as a new task — workers perform ops themselves
+     per the repo CLAUDE.md §Autonomy & escalation and the queue preamble.
+     Exception: destructive ops (data-wiping resets, deletes) stay with
+     the user, explicitly labeled destructive.
+   - GENUINE DESIGN/implementation-choice questions → relay to the user
+     verbatim. Then continue the same Claude session: write a NEW task
+     file whose FIRST LINE is exactly "RESUME:<session_id>" followed by
+     the user's answer.
+   The session_id is a long UUID — copy it exactly from the result JSON
+   at the moment you write the RESUME file; never invent, shorten, or
+   recall one from memory (sess_12345 incident, 2026-07-20).
+6. If your own reply/narration dies mid-turn (e.g. a rate limit), the
+   functional work usually completed first — reconstruct status from the
+   queue dirs and result JSONs, never from the truncated chat reply.
