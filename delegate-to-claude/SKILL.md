@@ -21,7 +21,12 @@ Multi-file code changes, deep research, tasks failed twice locally.
    NEVER run the worker or `claude` manually — long tasks outlive the
    terminal tool's 180 s timeout. The worker is single-instance locked
    (~/agents/.worker.lock) and drains the queue sequentially.
-3. Status: pending = ~/agents/queue/*.task · finished = queue/done/ ·
+3. Completions notify Discord automatically: claude-worker.sh posts each
+   finished task to #reports via `hermes send` (no LLM, no agent loop, so it
+   survives relay rate limits) with status, duration, cost, any PR: line, a
+   result tail, and the session_id. Override the target with
+   WORKER_NOTIFY_TARGET; the body is built in the worker's python heredoc.
+   On-demand status: pending = ~/agents/queue/*.task · finished = queue/done/ ·
    failed = queue/failed/ · result JSON = newest
    ~/agents/logs/claude-<slug>-*.json (note its session_id field).
 4. When a result is complete: summarize the outcome to daily-log/ and
