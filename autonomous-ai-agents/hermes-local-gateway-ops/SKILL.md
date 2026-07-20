@@ -1,21 +1,117 @@
 ---
 name: hermes-local-gateway-ops
 description: Operate and troubleshoot THIS machine's Hermes gateway (m4-mini,
-  Discord, Ollama backend) — known failure modes, config hazards, and health
-  checks. For general Hermes usage see the hermes-agent skill.
+  Discord, Gemini backend; formerly local Ollama) — known failure modes,
+  config hazards, and health checks. For general Hermes usage see the
+  hermes-agent skill.
 ---
 # Hermes gateway ops on the m4-mini
 
 This deployment: Hermes gateway (Discord adapter, bot `orchestrator#5798`)
-backed by a local Ollama server at `http://localhost:11434/v1`, model
-`qwen3-agent-128k` — an unsloth Qwen3-8B-128K GGUF (honest 131K context
-metadata) built with the original qwen3-agent chat template and
-`num_ctx 65536`, kept warm permanently (~10 GB resident, keep-alive forever).
-Role (Everett's decision 2026-07-18): the local 8B is a **relay + delegate
-orchestrator only** — it routes work to Claude Code via the task queue (see
-delegate-to-claude) and must not code or author skills itself. Logs:
-`~/.hermes/logs/` (agent.log, gateway.log, errors.log, gateway-exit-diag.log)
-and `~/agents/logs/` (ollama.log/err, hermes.err, backup, mempressure).
+backed — **since the 2026-07-19 tripwire flip** — by Gemini via the
+OpenAI-compat endpoint (`base_url:
+https://generativelanguage.googleapis.com/v1beta/openai`), model
+`gemini-flash-lite-latest` (flash-full hit free-tier RPM limits; see the
+Gemini section). The previous backend, local Ollama `qwen3-agent-128k`, was
+retired after a hallucinated-action incident executed the pre-agreed
+tripwire; the model stays on disk for a potential retry (qwen-era sections
+below are retained for that case). Role unchanged: the gateway model is a
+**relay + delegate orchestrator only** — it routes work to Claude Code via
+the task queue (see delegate-to-claude) and must not code or author skills
+itself. Logs: `~/.hermes/logs/` (agent.log, gateway.log, errors.log,
+gateway-exit-diag.log) and `~/agents/logs/` (ollama.log/err, hermes.err,
+backup, mempressure).
+
+## Gemini free-tier limits (live incidents 2026-07-19/20)
+
+- `gemini-flash-latest` resolves to `gemini-3.5-flash`. Free tier:
+  **5 requests/min and 20 requests/day per model per project**
+  (quotaIds `GenerateRequestsPerMinutePerProjectPerModel-FreeTier`,
+  `...PerDay...`). A heavy verification turn (5+ calls) trips the RPM cap;
+  the daily cap is burned fast because the SAME key is shared with the
+  pantry app's `supabase/functions/.env` (standing recommendation: separate
+  key or paid tier, ~$0.20/mo at relay volume).
+- Current model `gemini-flash-lite-latest` has higher free RPM and passes
+  the verification round in seconds; relay-duty quality is fine.
+- **429 kills narration, not work**: both rate-limited turns had already
+  completed their functional actions (e.g. a correct task file written)
+  before the reply died with a short error. Reconstruct status from the
+  queue dirs and logs, never from the truncated chat reply.
+- A 429 is mislogged as `payment / credit error` and marks the auxiliary
+  provider chain unhealthy for 600s (title generation dies for 10 min) —
+  expected noise after any rate limit, not a billing problem.
+- Transient Gemini `503 This model is currently experiencing high demand`
+  is retried automatically; only worry if all 3 retries fail.
+
+## Restart & exit-diagnostics triage
+
+- Config edits (model, `agent.system_prompt`) take effect only after a
+  gateway restart. `agent.system_prompt` is injected into every agent
+  creation and survives the daily 4 AM session reset (`session_reset:
+  both/1440/at_hour 4`) — it is the ONLY reliable place for standing rules.
+- Restart = SIGTERM under launchd. The gateway then **deliberately exits
+  code 1** ("so systemd Restart=on-failure can revive the gateway") — a
+  nonzero exit after SIGTERM is the contract, not a crash.
+- After restart, verify the new backend took: grep agent.log for
+  `OpenAI client created (agent_init` and check `provider=/base_url=/model=`.
+- `gateway-exit-diag.log` is JSONL and **UTC** (local+4h; other logs are
+  local time). "Was that restart intentional?": pair each
+  `gateway.exit_nonzero` with the same-moment `Shutdown context:
+  signal=SIGTERM under_systemd=yes parent_pid=1` line in gateway.log —
+  SIGTERM+parent_pid=1 = intentional; `SystemExit: 75` = restart-requested
+  exit; only a real traceback = genuine crash. Restart-frequency audit:
+  count `gateway.start` events per day (3 starts in 90s = rapid
+  config-iteration signature, not a crash loop).
+  `gateway-shutdown-diag.log` stays 0 bytes; exit-diag is the only
+  lifecycle source of truth.
+
+## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
+
+During a verification round the relay reported a fabricated session id
+("sess_12345"; real ids are UUIDs). Dangerous because the RESUME flow writes
+`RESUME:<session_id>` into a task file — a fabricated id silently detaches
+the follow-up from the real Claude session. Hard rule now lives at the end
+of `agent.system_prompt`: copy the exact session_id from the result JSON at
+time of use; never invent, shorten, or recall from memory. Generalize it:
+any identifier the relay must round-trip (session ids, PR numbers, commit
+SHAs) is copy-at-time-of-use from the source artifact; verify by grepping
+the written task file against the result JSON.
+
+## Persona drift watch (recurring)
+
+Even with the persona + system_prompt live, the relay drifts back to doing
+things itself. Observed 2026-07-20 02:54: flash-lite ran claude-worker.sh
+manually via the terminal tool despite the explicit "you NEVER run
+claude-worker.sh" rule (survivable only because of the single-instance
+lock at `~/agents/.worker.lock`). Earlier, the same class of drift traced
+to a stale instruction copy: `~/.hermes/SOUL.md` (mirrored in
+`~/agents/system-config/`) still taught the pre-runner "run the worker
+manually" procedure. On any drift recurrence: (1) grep agent.log for the
+offending tool call, (2) diff BOTH SOUL.md copies and `agent.system_prompt`
+for stale procedure text, (3) re-run the scripted verification round below.
+
+## Scripted verification rounds (reusable harness)
+
+Three Discord prompts, run after every model/config change (transcripts in
+agent.log, 2026-07-19/20):
+1. **Diagnostic (read-only)**: "DIAGNOSTIC — report only, take NO actions…"
+   — identity, injected context, tool inventory, self-reported GAPS (the
+   GAPS section is what surfaced the stale SOUL.md).
+2. **Action round**: "FINAL VERIFICATION — this time, actually do it…" —
+   forces real skill_view/read_file/write_file/terminal calls; catches
+   claimed-but-not-performed actions.
+3. **Light setup round** (cheap, rate-limit-safe): "SETUP VERIFICATION —
+   keep it light: sections 1, 2, 4 are text-only…" — reran verbatim after
+   the flash-lite flip, passed in 7.5s / 3 API calls.
+Score: routing (incl. the debugging→EFFORT:max trap), rules recall, status
+truthfulness (did it read queue dirs before answering?), honesty.
+
+---
+# Local-model (qwen/Ollama) era — retained for a potential local retry
+
+The sections below apply only if the gateway is flipped back to a local
+Ollama backend. The config.yaml hazard, clarify-hang, and triage sections
+further down remain current regardless of backend.
 
 ## Hard constraint: model context ≥ 64K (live incident 2026-07-17/18)
 
