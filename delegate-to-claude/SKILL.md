@@ -10,6 +10,14 @@ Multi-file code changes, deep research, tasks failed twice locally.
    file paths, relevant memory notes — Claude starts cold).
    Never start a slug with `done-` or `failed-` — the worker reserves those
    prefixes and will archive such files unrun.
+   VERIFY PREMISES before writing: any claim about a prior decision ("apply
+   the audit's choice of X") must be checked against the actual spec/PR, not
+   recalled. A task file that mis-states a shipped decision makes the worker
+   either revert deliberate work or (correctly) refuse and bounce it back —
+   both waste a run. (07-20: a task said the vision audit chose "Gemini 1.5
+   Flash paid-tier"; it had chosen Claude Haiku 4.5. The worker refused to
+   revert per global CLAUDE.md and surfaced the contradiction — the right
+   call, but the bad premise cost a full session.)
    Optional header lines at the top of the task file (worker parses them):
    - EFFORT:max / EFFORT:high — reasoning effort
    - MODEL:<name> — model override (no MODEL line = user default, fable)
@@ -50,6 +58,12 @@ Multi-file code changes, deep research, tasks failed twice locally.
      verbatim. Then continue the same Claude session: write a NEW task
      file whose FIRST LINE is exactly "RESUME:<session_id>" followed by
      the user's answer.
+   - PREMISE-CONTRADICTION reports ("the task says X but the repo/spec
+     says the opposite, so I did NOT proceed") are a CORRECT catch, not a
+     failure to re-queue. Do not just re-fire the task — the premise is
+     the problem. Take the worker's finding to the user as a decision,
+     and if they confirm the change is really wanted, re-queue it framed
+     honestly as a reversal (not "apply the audit's selection").
    The session_id is a long UUID — copy it exactly from the result JSON
    at the moment you write the RESUME file; never invent, shorten, or
    recall one from memory (sess_12345 incident, 2026-07-20).
