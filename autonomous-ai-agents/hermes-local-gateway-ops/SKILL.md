@@ -32,7 +32,16 @@ backup, mempressure).
   pantry app's `supabase/functions/.env` (standing recommendation: separate
   key or paid tier, ~$0.20/mo at relay volume).
 - Current model `gemini-flash-lite-latest` has higher free RPM and passes
-  the verification round in seconds; relay-duty quality is fine.
+  the verification round in seconds; relay-duty quality is fine. As of
+  2026-07-20 the alias resolves to **`gemini-3.1-flash-lite`**.
+- A THIRD free-tier limiter, separate from RPM/RPD, actually trips the
+  post-cutoff 429s: **250,000 input-tokens-per-minute per model**
+  (`quotaId GenerateContentInputTokensPerModelPerMinute-FreeTier`,
+  quotaValue 250000). It's the per-minute aggregate on the shared key, not
+  request size — individual turns were only ~11K–32K tokens yet still 429'd
+  (03:11 and 13:06 on 07-20, both exhausting all 3 retries). `retryDelay`
+  comes back 33–59s, so the full retry cycle burns ~8–13s then hard-fails.
+  Same fix as the RPM/RPD burn: stop sharing the key with the pantry app.
 - **429 kills narration, not work**: both rate-limited turns had already
   completed their functional actions (e.g. a correct task file written)
   before the reply died with a short error. Reconstruct status from the
@@ -90,6 +99,18 @@ manually" procedure. On any drift recurrence: (1) grep agent.log for the
 offending tool call, (2) diff BOTH SOUL.md copies and `agent.system_prompt`
 for stale procedure text, (3) re-run the scripted verification round below.
 
+Second facet, same 07-20 session (`20260720_005921_e901cd61`), triggered by
+a user "please update our setup using claude…" message: the relay tried to
+**hand-edit the skill files itself** via three `skill_manage` edit calls
+(03:11:16/21/23) instead of queueing a Claude task. All three failed with
+"Could not find a match for old_string" — it failed SAFE by luck, not by
+guardrail (this is the real story behind the daily-log's "edited skills,
+content-identical no-op" note: the edits didn't no-op by policy, the
+old_string just didn't match). Boundary to reinforce in `agent.system_prompt`:
+the relay must NEVER call `skill_manage`/edit skills or config directly —
+any "update the setup/skills" request is a queued Claude task
+(see delegate-to-claude), never a self-edit.
+
 ## Scripted verification rounds (reusable harness)
 
 Three Discord prompts, run after every model/config change (transcripts in
@@ -105,6 +126,18 @@ agent.log, 2026-07-19/20):
    the flash-lite flip, passed in 7.5s / 3 API calls.
 Score: routing (incl. the debugging→EFFORT:max trap), rules recall, status
 truthfulness (did it read queue dirs before answering?), honesty.
+
+## Security posture (startup audit)
+
+The gateway runs `hermes.security_audit` at every boot and logs findings to
+errors.log (`Security posture audit found N issue(s)`). One standing,
+unremediated finding fires on every boot (54× as of 07-21):
+**"SSH password authentication is ENABLED"** — brute-forceable on an
+internet-facing box. Fix is `PasswordAuthentication no` in sshd_config plus
+key-based auth; it's a real system change so it stays with the user (flag
+it, don't silently edit sshd_config in an autonomous run). Treat a *growing*
+issue count or a NEW audit line as the signal — the lone SSH item is
+expected until remediated.
 
 ---
 # Local-model (qwen/Ollama) era — retained for a potential local retry
