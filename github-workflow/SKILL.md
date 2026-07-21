@@ -30,3 +30,21 @@ description: How to create repos, branches, commits, and PRs on GitHub for real 
   pushed to its branch silently never reach main. Recovery: open a new PR
   from the same branch (it contains just the delta commits). This happened
   with pantry PR #3 → PR #5 on 2026-07-18.
+
+## Stacked PRs (branch based on another open PR's branch)
+- Prefer NOT to stack — branch from main and wait for the dependency to
+  merge (see Reporting). Stack only when the work genuinely can't wait; if
+  you do, say "stacked on #N, merge that first" in the PR body.
+- When the base PR is **squash-merged**, the downstream PR breaks: GitHub
+  leaves it OPEN · base=<merged-branch> · CONFLICTING · DIRTY, and its diff
+  now mixes in all of the base's already-merged commits — not reviewable.
+  Un-stack it (this is prep, NOT a merge):
+  1. git fetch, then `git rebase --onto origin/main <old-base>` to drop the
+     now-merged commits and replay only this PR's own commits.
+  2. `git push --force-with-lease`.
+  3. `gh pr edit <num> --base main` to retarget off the merged branch.
+     PR should flip to MERGEABLE/CLEAN.
+  4. A force-push done while the PR was DIRTY may NOT dispatch CI — trigger
+     a fresh run with a no-content close→reopen (`gh pr close`/`reopen`),
+     then confirm green with `gh pr checks <num>`.
+  This was pantry PR #10 after #9 squash-merged, 2026-07-20.
