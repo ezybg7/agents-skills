@@ -44,7 +44,13 @@ Working routes, in order of preference:
    script (inline-secret curl commands get denied).
 4. `rm` is blocked: you cannot delete your own temp files. Name them
    predictably (`~/agents/tmp_*`) and flag them "safe to delete" in the
-   handoff note.
+   handoff note. CONSEQUENCE (found 07-21): because nobody can `rm` them,
+   these `~/agents/tmp_*` files pile up in the repo root and the nightly
+   backup faithfully commits them into `m4-mini-orchestrator.git` (16 such
+   files in the 07-21 backup). Prefer `/tmp/<slug>_*` (outside the backed-up
+   tree) for throwaway scripts; reserve `~/agents/tmp_*` for things a human
+   should see. Standing cleanup rec for the orchestrator: gitignore `tmp_*`
+   in the backup repo or sweep them pre-backup.
 
 ## gh / GitHub from the worker
 
