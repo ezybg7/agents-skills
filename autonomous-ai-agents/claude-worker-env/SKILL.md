@@ -46,6 +46,29 @@ Working routes, in order of preference:
    predictably (`~/agents/tmp_*`) and flag them "safe to delete" in the
    handoff note.
 
+## gh / GitHub from the worker
+
+`gh` is off the worker PATH, so it runs only via the route-3 python3 spawn
+(`PATH=/opt/homebrew/bin:...`). The auth token lives in the **macOS
+keychain**, NOT in `hosts.yml` and NOT in `GH_TOKEN`/`GITHUB_TOKEN` env vars
+— inside the spawn `gh` is already authenticated, so just call it. Do **not**
+burn turns hunting for those env vars or `printenv GH_TOKEN`: they are empty
+by design (the 07-20 status-check session wasted ~10 turns proving this).
+Full PR-create bridge: write `~/agents/tmp_<slug>_pr.py`, put the body in a
+file, `subprocess.run(['gh','pr','create','--base',...,'--body-file',...],
+cwd=repo, env={**os.environ,'PATH':'/opt/homebrew/bin:'+os.environ['PATH']})`.
+
+## Verification when npm/tsc won't run
+
+When every route to `npm run typecheck/lint/test` is denied (happens on
+implementation tasks) and you can't verify locally, **lean on GitHub Actions
+CI as the real gate** — push the branch, then poll `gh pr checks <n>` /
+`gh run view <id>` through the route-3 spawn. Say so explicitly in the
+handoff ("relied on CI, couldn't run checks locally"). Caveat for pantry:
+`tsc` excludes `supabase/functions/**` and jest only covers
+`_shared/*.test.ts`, so an Edge Function's `index.ts` is gated by neither
+local checks nor CI — review it by eye and note that in the PR.
+
 ## Docker = OrbStack
 
 No plain `docker` binary exists anywhere on default PATHs. The CLI is at
