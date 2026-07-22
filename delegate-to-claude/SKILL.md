@@ -66,7 +66,18 @@ Multi-file code changes, deep research, tasks failed twice locally.
      honestly as a reversal (not "apply the audit's selection").
    The session_id is a long UUID — copy it exactly from the result JSON
    at the moment you write the RESUME file; never invent, shorten, or
-   recall one from memory (sess_12345 incident, 2026-07-20).
+   recall one from memory (sess_12345 incident, 2026-07-20). And copy it
+   from the result JSON of the SPECIFIC session you're continuing — match by
+   slug (`claude-<that-slug>-*.json`), NOT the newest JSON in the logs dir.
+   Nightly reflect and other queued jobs interleave and leave a newer JSON;
+   grabbing "the latest" points RESUME at the wrong conversation.
+   (07-21: `resume-vision-model-selection` pasted `004f21ce…` — the
+   reflect-2026-07-21 session's id, which was simply the newest JSON — instead
+   of the vision run's `4c44f549…`, and the worker died with "No conversation
+   found with session ID". FAILED run, wasted pickup.)
+   When a RESUME hard-fails with "No conversation found", do NOT re-fire the
+   RESUME (the id is wrong or the conversation aged out) — re-queue as a FRESH
+   `<slug>.task` that inlines the original goal plus the user's answer.
 6. If your own reply/narration dies mid-turn (e.g. a rate limit), the
    functional work usually completed first — reconstruct status from the
    queue dirs and result JSONs, never from the truncated chat reply.
