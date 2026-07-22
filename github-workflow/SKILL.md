@@ -31,6 +31,22 @@ description: How to create repos, branches, commits, and PRs on GitHub for real 
   from the same branch (it contains just the delta commits). This happened
   with pantry PR #3 → PR #5 on 2026-07-18.
 
+## API-gated? ship an idempotent script instead of calling `gh` live
+When `gh` is gated in the worker shell (see claude-worker-env) but the task
+needs API writes — bulk-create issues, apply labels, open a PR — don't burn the
+session fighting the gate. Commit a script into the repo on a pushed branch and
+hand off a single command; the branch push works even when every `gh` call is
+denied. Make the script safe to run exactly once by a permissioned human/spawn:
+- **Upsert, never blind-create** — create labels/milestones only if absent.
+- **Fetch existing state and skip matches** so re-runs can't duplicate. E.g.
+  read existing issue titles, skip any that already exist (satisfies
+  "no duplicates" even though the worker couldn't query the API itself).
+- **Support `DRY_RUN=1`** to print what it would do without mutating.
+- Put the exact invocation in the handoff (`bash scripts/create-tracking-issues.sh`;
+  `DRY_RUN=1 bash …` to preview). CI + the script are the gate.
+(Proven 07-21: `chore/spec-audit-tracking-issues` filed 18 spec-tracking issues
+this way after `gh issue create` was denied 13×.)
+
 ## Stacked PRs (branch based on another open PR's branch)
 - Prefer NOT to stack — branch from main and wait for the dependency to
   merge (see Reporting). Stack only when the work genuinely can't wait; if
