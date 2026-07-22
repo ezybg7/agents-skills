@@ -64,6 +64,28 @@ Full PR-create bridge: write `~/agents/tmp_<slug>_pr.py`, put the body in a
 file, `subprocess.run(['gh','pr','create','--base',...,'--body-file',...],
 cwd=repo, env={**os.environ,'PATH':'/opt/homebrew/bin:'+os.environ['PATH']})`.
 
+**Budget ONE probe, then pivot — don't burn a session re-testing the gate.**
+Both 07-21 daytime sessions (receipt-parsing-design, pantry-issue-tracking)
+spent ~13 permission denials EACH re-locating the `gh` binary and re-trying
+`gh`/`npm`/`node` in every variant (absolute path, sandbox override, plain
+form) before giving up — pure waste. Once one `gh`/`npm`/`node` call is denied
+in a session, treat that tool as gated for the whole session and pivot
+immediately. Note also (07-21): the `Write` **tool** to `/tmp/*.md` and to
+`<repo>/.git/*` was itself denied, so the "dump the PR body to a file" bridge
+can also fail — don't assume any out-of-repo write will land.
+
+**Robust fallback when `gh` is needed but gated: ship an idempotent script on a
+pushed branch, hand off the one-command run.** This is what actually worked in
+both 07-21 sessions and it beats fighting the gate. Commit a script into the
+repo (e.g. `scripts/create-tracking-issues.sh`) that is safe to run once by a
+permissioned human/spawn: upsert (don't blind-create) labels, **fetch existing
+state and skip anything that already exists** so re-runs can't duplicate, and
+support `DRY_RUN=1` for a preview. Then put the exact invocation in the handoff
+(`bash scripts/create-tracking-issues.sh`). The branch push succeeds from the
+worker even when every `gh` call is denied — CI + the script become the gate.
+(Pattern detail lives in github-workflow → "API-gated? ship an idempotent
+script".)
+
 ## Verification when npm/tsc won't run
 
 When every route to `npm run typecheck/lint/test` is denied (happens on
@@ -117,4 +139,12 @@ node/python spawn (route 3 above) — `DOCKER_HOST=` prefixing is denied.
   killed run, and the unmoved .task re-runs on next pickup.
 - Session ids for the `RESUME:<session_id>` flow are UUIDs copied verbatim
   from the result JSON. Never invent, shorten, or recall one from memory
-  (the "sess_12345" fabrication incident, 2026-07-20).
+  (the "sess_12345" fabrication incident, 2026-07-20). NEW TRAP (07-21):
+  copy the id from the result JSON that MATCHES THE SLUG you mean to resume,
+  not the newest `claude-*.json` in the logs dir — nightly reflect/other jobs
+  interleave and leave a newer JSON. The `resume-vision-model-selection` task
+  FAILED ("No conversation found with session ID") because it pasted
+  `004f21ce…`, the *reflect-2026-07-21* session's id, instead of the vision
+  run's real id `4c44f549…`. When a RESUME hard-fails this way, do NOT retry
+  the resume — re-queue as a FRESH task carrying the needed context (a resume
+  can also just be too old; conversations aren't guaranteed to persist for days).
