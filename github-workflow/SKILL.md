@@ -47,6 +47,29 @@ denied. Make the script safe to run exactly once by a permissioned human/spawn:
 (Proven 07-21: `chore/spec-audit-tracking-issues` filed 18 spec-tracking issues
 this way after `gh issue create` was denied 13×.)
 
+## Detect branch drift / mergeability without checking out or pushing
+To report how far open branches have fallen behind `main` and whether they still
+merge cleanly — for a nightly-sync report, a stacked-PR health check, or before
+rebasing — use read-only git plumbing; no checkout, no push, no working-tree
+churn (proven 07-23 building pantry's `nightly-sync` workflow, dry-run against
+real branches):
+- **Enumerate remote branches:** `git for-each-ref --format='%(refname:strip=3)'
+  refs/remotes/origin` (strip=3 drops `refs/remotes/origin/`).
+- **Ahead/behind counts:** `git rev-list --count origin/main..origin/<branch>`
+  (commits the branch has that main lacks) and the reverse
+  `origin/<branch>..origin/main` (how far behind). `--left-right A...B` gives
+  both at once.
+- **Does it still merge cleanly?** `git merge-tree --write-tree origin/<branch>
+  origin/main` — **exit 0 = clean, exit 1 = conflict** (it also prints the
+  conflicting paths). This is the reliable no-side-effects mergeability probe;
+  it needs a reasonably modern git. Correctly flagged `feat/receipt-parsing` as
+  8 behind main and conflicting on `ReviewList.tsx`.
+Keep such a report **read-only by default** (post drift to a job summary / an
+upserted tracking issue); gate any actual merge+push behind an explicit opt-in
+so it can't disturb a rebase/stacked-PR flow. From the worker, remember exit
+codes and `for`-loops can't be captured in the Bash tool (see claude-worker-env)
+— iterate in a `node`/`python3` spawn or bake the loop into the committed script.
+
 ## Stacked PRs (branch based on another open PR's branch)
 - Prefer NOT to stack — branch from main and wait for the dependency to
   merge (see Reporting). Stack only when the work genuinely can't wait; if
