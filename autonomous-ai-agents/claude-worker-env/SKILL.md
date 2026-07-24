@@ -72,6 +72,16 @@ allowlist and rejects anything it can't resolve. Two forms are worth knowing
 - **`git` needs no `cd`.** Compound `cd <repo> && git …` is denied (the
   untrusted-hook guard noted above); use `git -C <repo> <cmd>` instead — it
   passes plainly and is the clean substitute for every git call from the worker.
+- **`chmod` is gated, so is running/linting a committed shell script.** When you
+  add a `scripts/*.sh` from the worker (07-23, nightly-pull-routine),
+  `chmod +x <path>`, `bash -n <path>` (syntax check), and executing it
+  (`./script.sh`, `bash script.sh --help`) are ALL denied. Two consequences:
+  (1) **set the executable bit through git, not chmod** — `git -C <repo>
+  update-index --chmod=+x <path>` records mode `100755` in the commit (passes
+  plainly, and it's what actually lands in the repo anyway). (2) You **cannot
+  lint or run the script locally** — verify shell by eye, parse workflow YAML
+  with a `node` one-liner (route 1), and let CI be the real gate; say so in the
+  handoff. Same limit as npm/tsc below.
 
 ## gh / GitHub from the worker
 
