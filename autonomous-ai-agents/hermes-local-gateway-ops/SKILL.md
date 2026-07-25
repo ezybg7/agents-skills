@@ -127,6 +127,40 @@ agent.log, 2026-07-19/20):
 Score: routing (incl. the debugging→EFFORT:max trap), rules recall, status
 truthfulness (did it read queue dirs before answering?), honesty.
 
+## Curator — first live run on this box (2026-07-24)
+
+The skill-lifecycle curator (product reference: hermes-agent skill) ran for
+real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
+`run_count=1`**. What that means operationally on this deployment:
+
+- **It curates the nightly skills repo directly.** `~/.hermes/skills` is a
+  **symlink to `~/agents/skills`** (same tree), so the curator's target IS the
+  git-backed repo the nightly reflection commits to. Its scope is still only
+  `created_by: agent` skills; bundled/hub skills are off-limits.
+- **First run was a free deterministic sweep, zero LLM.** `consolidate` is
+  unset in `~/.hermes/config.yaml` → default **off**, so the run was
+  `auto: no changes; llm: skipped (consolidation off)` — seeded 70 / checked
+  72 / archived 0, ~0.5s, 0 tokens. A token-spending run only happens if
+  someone flips `curator.consolidate: true` or runs `--consolidate`.
+- **Where its artifacts land:** report + machine record at
+  `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
+  `~/agents/skills/.curator_state` (gitignored); usage sidecar at
+  `~/.hermes/skills/.usage.json` (== `~/agents/skills/.usage.json`, gitignored).
+  A **pre-run backup snapshot** (`skills.tar.gz`, ~4.5 MB, `reason:
+  pre-curator-run`) is written to `~/agents/skills/.curator_backups/<ts>/` —
+  untracked litter in the skills repo; now gitignored (`.curator_backups/`,
+  plus `.archive/` for when pruning starts) on `nightly-2026-07-25`.
+- **Interaction to watch with the nightly reflection:** staleness is driven by
+  the usage sidecar (skill *invocation* activity), **not by file edits**.
+  The nightly writes/commits skill files but that is not an invocation — so a
+  skill the nightly maintains but nobody ever *invokes* can still age toward
+  `stale_after_days`/`archive_after_days` and get archived out from under us.
+  It **never deletes** (archives to `~/.hermes/skills/.archive/`, i.e. inside
+  this repo; recover with `hermes curator restore <name>` or `mv`), so it's
+  reversible — but if a maintained skill vanishes, check the curator report
+  before re-creating it. Pin anything the nightly must keep alive:
+  `hermes curator pin <name>`.
+
 ## Security posture (startup audit)
 
 The gateway runs `hermes.security_audit` at every boot and logs findings to
