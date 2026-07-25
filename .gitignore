@@ -1,4 +1,6 @@
 .DS_Store
 .curator_state
+.curator_backups/
+.archive/
 .usage.json
 .usage.json.lock
