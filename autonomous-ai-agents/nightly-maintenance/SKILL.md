@@ -19,9 +19,12 @@ task prompt, not the clock.
 
 - **Branch `nightly-<date>` off the PREVIOUS night's branch, NOT `main`.** The
   nightly branches **chain**: each is an ancestor of the next, so the whole
-  history accumulates on one line off `main`. As of 07-26 that's **23 commits
-  ahead of `main`, all unmerged** — Everett reviews and merges; you NEVER merge
-  and NEVER open a PR for these.
+  history accumulates on one line off `main` and grows ~1–2 commits/night, **all
+  unmerged**. The absolute count drifts, so check it live with
+  `git -C ~/agents/skills rev-list --count main..HEAD` rather than trusting a
+  number written here (it was **25** as of 07-26 — not the "23" this line first
+  claimed; corrected on 07-27, the runbook's first live use). Everett reviews and
+  merges; you NEVER merge and NEVER open a PR for these.
   - `git -C ~/agents/skills switch -c nightly-<date>` (the current HEAD is the
     latest nightly, so a plain branch-off is correct). Verify chaining with
     `git -C ~/agents/skills merge-base --is-ancestor nightly-<yesterday> nightly-<date>`.
@@ -33,7 +36,7 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26 were all idle: no new
+- **Idle days are normal and frequent** (07-22/23/24/26/27 were all idle: no new
   worker session since the last nightly, infra logs routine). On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
