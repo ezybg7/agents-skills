@@ -80,7 +80,15 @@ allowlist and rejects anything it can't resolve. Two forms are worth knowing
   flagged). It's an approval prompt, not a hard denial, but in the headless
   nightly it stalls the same way. **Run fallback attempts as separate calls**
   (or resolve the glob to a literal path first) rather than `A || B || C` in one
-  line.
+  line. **The trigger is the unresolved glob itself, not the chaining** (07-28
+  nightly): a *single, unchained* `jq -r '.result' ~/agents/logs/claude-reflect-
+  2026-07-27-*.json` tripped the same "multiple operations … requires approval"
+  gate even though the wildcard matched exactly one file and there was no
+  `||`/`&&`. So the gate reads a bare `*` file-glob as "multiple operations"
+  regardless of match count or chaining. Fix is the same and applies to lone
+  commands too: **expand the glob to the literal path before running** (the
+  reflect JSONs are named `claude-reflect-<date>-<date>-030000.json`, fully
+  derivable — no wildcard needed).
 - **`chmod` is gated, so is running/linting a committed shell script.** When you
   add a `scripts/*.sh` from the worker (07-23, nightly-pull-routine),
   `chmod +x <path>`, `bash -n <path>` (syntax check), and executing it
