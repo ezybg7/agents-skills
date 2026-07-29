@@ -73,6 +73,15 @@ task prompt, not the clock.
     provenance note to the project file ("<date> daily-log folded in during the
     <today> nightly archival"); and **state in the reflection that nothing was
     lost** (name where the rest already lives). Don't duplicate a skill's facts.
+  - **But "usually nothing to fold" is not "never" — diff section-by-section, don't
+    assume.** 07-17→07-20 were all no-add folds, but **07-21 (folded 07-29) broke the
+    streak**: its receipt-parsing half was already in `pantry.md` Status, yet its
+    *second* deliverable — the **spec-audit → `chore/spec-audit-tracking-issues`
+    branch** (idempotent `scripts/create-tracking-issues.sh` filing 18 `[spec 2..19]`
+    issues, still un-run because `gh` is gated) — was captured **nowhere** and had to
+    be folded in. Lesson: walk each `##` section of the archived log against the
+    project file before declaring a no-op; a still-open unmerged branch/deliverable
+    is exactly the durable thing that slips through.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
