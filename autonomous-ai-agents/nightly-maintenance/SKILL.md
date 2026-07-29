@@ -36,8 +36,12 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27 were all idle: no new
-  worker session since the last nightly, infra logs routine). On an idle day
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29 were all idle for
+  the SKILLS task: no new worker session since the last nightly — worker-runner.log
+  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23 — and infra
+  logs routine: errors.log frozen 07-23, gateway/curator 07-24, mem ~74% free,
+  ollama healthy). Note "SKILLS-idle" is independent of the MEMORY task — 07-29 was
+  SKILLS-idle yet had a real fold (see Task 2). On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
