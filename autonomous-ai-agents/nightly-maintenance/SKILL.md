@@ -36,12 +36,12 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
   has only lock-exit noise past `done (nightly-pull-routine)` on 07-23 — and infra
   logs routine: errors.log frozen 07-23, gateway/curator 07-24, mem ~74% free,
   ollama healthy). Note "SKILLS-idle" is independent of the MEMORY task — 07-29 was
-  SKILLS-idle yet had a real fold (see Task 2). On an idle day
+  SKILLS-idle yet had a real fold (see Task 2), while 07-30 was idle on *both*. On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -81,7 +81,12 @@ task prompt, not the clock.
     issues, still un-run because `gh` is gated) — was captured **nowhere** and had to
     be folded in. Lesson: walk each `##` section of the archived log against the
     project file before declaring a no-op; a still-open unmerged branch/deliverable
-    is exactly the durable thing that slips through.
+    is exactly the durable thing that slips through. **07-22 (folded 07-30) went back
+    to a clean no-op** — but only *after* diffing all four of its sections: its
+    worker-env "budget ONE probe" lesson was already in `claude-worker-env`, its
+    RESUME-from-the-slug's-JSON-not-the-newest lesson in `delegate-to-claude`, its
+    idempotent-`gh`-script pattern in `github-workflow`, and its spec-audit deliverable
+    already folded into `pantry.md` Status on 07-29. No-op is the norm, but earn it.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
