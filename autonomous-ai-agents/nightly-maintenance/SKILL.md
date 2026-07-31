@@ -36,12 +36,13 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
   has only lock-exit noise past `done (nightly-pull-routine)` on 07-23 — and infra
-  logs routine: errors.log frozen 07-23, gateway/curator 07-24, mem ~74% free,
-  ollama healthy). Note "SKILLS-idle" is independent of the MEMORY task — 07-29 was
-  SKILLS-idle yet had a real fold (see Task 2), while 07-30 was idle on *both*. On an idle day
+  logs routine: errors.log frozen 07-23 (0 entries after), gateway/curator 07-24, mem ~74% free,
+  ollama healthy `/v1/models` 200s). Note "SKILLS-idle" is independent of the MEMORY task —
+  **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30 was
+  idle on *both*. On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -87,6 +88,17 @@ task prompt, not the clock.
     RESUME-from-the-slug's-JSON-not-the-newest lesson in `delegate-to-claude`, its
     idempotent-`gh`-script pattern in `github-workflow`, and its spec-audit deliverable
     already folded into `pantry.md` Status on 07-29. No-op is the norm, but earn it.
+  - **07-23 (folded 07-31) broke the no-op streak again — the SAME failure mode as 07-21.**
+    Its `## Nightly reflection` half was all already-captured worker-env/git facts (the
+    `simple_expansion` for-loop + `git -C` rules in `claude-worker-env`, the
+    `merge-tree --write-tree` drift recipe in `github-workflow`), BUT its **second section**
+    — the pantry **`feat/nightly-pull-routine`** deliverable (`scripts/sync-main.sh` = `npm run
+    sync`, `.github/workflows/nightly-sync.yml` report-only cron, spec `specs/nightly-sync.md`;
+    branch pushed, **PR never opened because `gh` is gated**) — was captured **nowhere** and was
+    folded into `pantry.md` Status. Two of three real folds so far (07-21, 07-23) have been exactly
+    this: a pushed-but-un-PR'd feature branch in the log's project section. **That is the pattern to
+    hunt** — walk each `##` section, and treat any still-open unmerged branch as fold-worthy until
+    you've found it in the project file.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
