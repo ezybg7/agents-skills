@@ -36,16 +36,16 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31 and 08-01 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01 and 08-02 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
   has only lock-exit noise past `done (nightly-pull-routine)` on 07-23 — and infra
   logs routine: errors.log frozen 07-23 (0 entries after), gateway/curator 07-24, mem ~74% free,
-  ollama healthy `/v1/models` 200s). That's **nine consecutive SKILLS-idle nights** now (since the
+  ollama healthy `/v1/models` 200s). That's **ten consecutive SKILLS-idle nights** now (since the
   last real worker session on 07-23) — a long idle streak is itself the expected steady state here,
   not a sign something is broken; keep making one honest runbook refinement rather than inventing edits.
   Note "SKILLS-idle" is independent of the MEMORY task —
-  **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30 and 08-01 were
-  idle on *both*. On an idle day
+  **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01 and 08-02
+  were idle on *both* (08-02's 07-25 fold was a verified no-op). On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -111,6 +111,14 @@ task prompt, not the clock.
     `chore/spec-audit-tracking-issues`) — exactly the fold-worthy pattern — but **all three were
     already in `pantry.md` Status** (nightly-pull-routine folded 07-31, the other two 07-29). So the
     hunt confirmed nothing was uncaptured: verified no-op, provenance line added, nothing lost.
+  - **07-25 (folded 08-02) was another earned no-op — the pattern-hunt came up empty.** 07-25 was
+    the *first-ever* archival night (it folded 07-17), so its own log is a `## Nightly reflection`
+    whose durable content is all infra/curator: the **first live curator run** (07-24 13:27) and the
+    box-specific fact that **`~/.hermes/skills` is a symlink to `~/agents/skills`** are both fully
+    captured in `hermes-local-gateway-ops` (§"Curator — first live run"); the `.gitignore` add of
+    `.curator_backups/`+`.archive/` is committed in the skills repo. Its only standing carry-over was
+    the pantry `feat/nightly-pull-routine` un-PR'd branch — already in `pantry.md` Status (folded
+    07-31). No un-captured deliverable of its own → verified no-op, provenance line added, nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
