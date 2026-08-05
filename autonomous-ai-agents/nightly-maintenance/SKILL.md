@@ -36,21 +36,21 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03 and 08-04 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04 and 08-05 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
-  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-04 the only new
-  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-04` — and infra
-  logs routine: errors.log frozen (only recurring Discord 522 offline-probe noise, e.g. 08-03 00:55),
-  agent.log only Discord `RESUMED session` noise (last 08-04 01:02), curator last run 07-31.
-  (mem % and ollama `/v1/models` were **not re-probed on 08-04** — `vm_stat` and `curl localhost`
+  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-05 the only new
+  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-05` — and infra
+  logs routine: errors.log frozen (only recurring Discord 522 offline-probe noise, last 08-03 00:55),
+  agent.log only Discord `RESUMED session` noise (last 08-05 02:24), curator last run 07-31.
+  (mem % and ollama `/v1/models` were **not re-probed on 08-04 or 08-05** — `vm_stat` and `curl localhost`
   are both sandbox-gated; the idle call rests on the worker-session + frozen-log evidence, which
   doesn't need them — earlier idle nights read ~74% free / ollama 200s.)) That's
-  **twelve consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
+  **thirteen consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
   idle streak is itself the expected steady state here,
   not a sign something is broken; keep making one honest runbook refinement rather than inventing edits.
   Note "SKILLS-idle" is independent of the MEMORY task —
-  **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01, 08-02, 08-03
-  and 08-04 were idle on *both* (08-02's 07-25, 08-03's 07-26 and 08-04's 07-27 folds were all verified no-ops). On an idle day
+  **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01, 08-02, 08-03,
+  08-04 and 08-05 were idle on *both* (08-02's 07-25, 08-03's 07-26, 08-04's 07-27 and 08-05's 07-28 folds were all verified no-ops). On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -142,6 +142,17 @@ task prompt, not the clock.
     plus PR #9/#10 review and the Anthropic-API-key prereq — but **all are already in the Status board**
     (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
     prereq both in the 07-20 entries). No un-captured deliverable of its own → verified no-op, nothing lost.
+  - **07-28 (folded 08-05) was another earned no-op — the pattern-hunt came up empty.** 07-28 was a
+    `## Nightly reflection` log (it archived 07-20). Diffed section-by-section: its lone SKILLS finding —
+    that a **bare file-glob** (a single unchained `jq -r '.result' …-*.json`) trips the "multiple
+    operations … requires approval" gate, so the trigger is the unresolved glob itself, **not** `||`/`&&`
+    chaining — is already codified in `claude-worker-env` (the gate bullet, tagged "(07-28…)"). Its MEMORY
+    half was the 07-20 no-op fold already recorded in `pantry.md` (line 13). Its standing carry-overs named
+    the fold-worthy pattern — the still-open un-PR'd branches (`feat/nightly-pull-routine`,
+    `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`) plus PR #9/#10 review and the
+    Anthropic-API-key prereq — but **all are already in the Status board** (nightly-pull-routine folded
+    07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries).
+    No un-captured deliverable of its own → verified no-op, nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
