@@ -36,21 +36,24 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06 and 08-07 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06/07 and 08-08 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
-  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-07 the only new
-  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-07` — and infra
-  logs routine: errors.log frozen (only recurring Discord DNS/522 offline-probe noise, last 08-03 00:55),
-  agent.log only Discord `RESUMED session` noise (last 08-07 02:21), curator last run 07-31.
-  (mem % and ollama `/v1/models` were **not re-probed on 08-04/05/06/07** — `vm_stat` and `curl localhost`
-  are both sandbox-gated; the idle call rests on the worker-session + frozen-log evidence, which
+  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-08 the only new
+  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-08` — and infra
+  logs routine: errors.log is **not** frozen but only appends the recurring Discord DNS offline-probe
+  noise (`ClientConnectorDNSError: gateway-*.discord.gg`, last 08-07 20:03 — the "frozen at 08-03" claim
+  in prior runbooks was stale; it keeps appending the same DNS class, never a real error),
+  agent.log only Discord `RESUMED session` noise (last 08-08 02:29), curator last run 08-07 18:04
+  (`auto: no changes; llm: skipped`, run_count 3 = 07-24/07-31/08-07).
+  (mem % and ollama `/v1/models` were **not re-probed on 08-04→08** — `vm_stat` and `curl localhost`
+  are both sandbox-gated; the idle call rests on the worker-session + DNS-only-noise evidence, which
   doesn't need them — earlier idle nights read ~74% free / ollama 200s.)) That's
-  **fifteen consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
+  **sixteen consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
   idle streak is itself the expected steady state here,
   not a sign something is broken; keep making one honest runbook refinement rather than inventing edits.
   Note "SKILLS-idle" is independent of the MEMORY task —
   **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01, 08-02, 08-03,
-  08-04, 08-05, 08-06 and 08-07 were idle on *both* (08-02's 07-25, 08-03's 07-26, 08-04's 07-27, 08-05's 07-28, 08-06's 07-29 and 08-07's 07-30 folds were all verified no-ops). On an idle day
+  08-04, 08-05, 08-06, 08-07 and 08-08 were idle on *both* (08-02's 07-25, 08-03's 07-26, 08-04's 07-27, 08-05's 07-28, 08-06's 07-29, 08-07's 07-30 and 08-08's 07-31 folds were all verified no-ops). On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -175,6 +178,18 @@ task prompt, not the clock.
     prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other two 07-29;
     #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). No un-captured deliverable of
     its own → verified no-op, nothing lost.
+  - **07-31 (folded 08-08) was another earned no-op — same twist as 07-29.** 07-31 was a `## Nightly
+    reflection` log (it archived 07-23), and like 07-29 its *own* MEMORY half **was** a real fold — it folded
+    07-23's pantry **`feat/nightly-pull-routine`** deliverable into Status (provenance at `pantry.md` line 15).
+    But archiving 07-31 tonight is still a no-op because that fold already landed on 07-31. Diffed
+    section-by-section: its SKILLS half was idle-day runbook upkeep (1 commit: added 07-31 to the idle-days
+    list, marked it SKILLS-idle-but-real-fold, and recorded the 07-23 fold as the *second* "un-PR'd branch
+    slips through" case) — committed in the skills repo. Its standing carry-overs named the fold-worthy
+    pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
+    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
+    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board
+    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
+    prereq in the 07-20 entries). No un-captured deliverable of its own → verified no-op, nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
