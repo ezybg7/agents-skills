@@ -287,6 +287,19 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   auxiliary fallback chain (local timeout → openrouter → nous → local)
   re-marks them unhealthy for 60s each time it runs. The security audit's
   SSH `PasswordAuthentication` warning is a known open item.
+- **MCP servers parking on startup** (new class, first seen 2026-08-09 05:44):
+  `errors.log` fills with bursts of `tools.mcp_tool: MCP server 'codegraph'
+  (and '.basic-memory') initial connection failed (attempt N/3) …` followed by
+  `failed initial connection after 3 attempts, parking until a reconnect is
+  requested` (WARNING level, `unhandled errors in a TaskGroup`). Volume is high
+  (~1,578 lines on 08-09, ~280 by 03:00 on 08-10) but it is **graceful
+  degradation, not a crash** — the server "parks" and reconnects on the next
+  request, and both `codegraph` and `basic-memory` do come up in live sessions.
+  Don't read the line count as a crisis; it's the startup-race retry path. Only
+  chase it if `hermes mcp list` shows a server actually disabled or a live tool
+  call fails after the reconnect. (This class postdates the 08-09 03:03 nightly
+  reflection, which is why runbooks through 08-09 list "only Discord DNS noise"
+  in errors.log.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
