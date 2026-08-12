@@ -292,21 +292,24 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   'codegraph' (and '.basic-memory') initial connection failed (attempt N/3) …`
   followed by `failed initial connection after 3 attempts, parking until a
   reconnect is requested` (WARNING level, `unhandled errors in a TaskGroup`).
-  Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, **1,026 total
-  by 03:00 on 08-11 with 72 more that day** — i.e. it is now the steady-state
-  dominant errors.log class, not a one-off spike) but it is **graceful
-  degradation, not a crash** — the server "parks" and reconnects on the next
-  request. **Directly confirmed self-healing on 08-11**: the nightly-maintenance
-  session's own tool bootstrap parked BOTH servers at 03:00 (last agent.log
-  lines), yet later in that same session `codegraph` and `basic-memory` both
-  reconnected and their tools became callable — so the park→reconnect contract
-  is observed end-to-end, not just assumed. Don't read the line count as a
-  crisis; it's the startup-race retry path. Only chase it if `hermes mcp list`
-  shows a server actually disabled or a live tool call fails after the reconnect.
-  (This class postdates the 08-09 03:03 nightly reflection, which is why runbooks
-  through 08-09 list "only Discord DNS noise" in errors.log; conversely the
-  Discord DNS/liveness-probe class went **quiet on 08-11** — last line 08-10
-  21:56, 0 on 08-11 — so errors.log is now essentially all MCP-parking noise.)
+  Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, 1,026 total by
+  03:00 on 08-11, **1,588 total by 03:00 on 08-12** — 563 parks across the full
+  08-11 day and 71 in tonight's 02:59 bootstrap window — i.e. it has stayed the
+  steady-state dominant errors.log class for three nights running, not a one-off
+  spike) but it is **graceful degradation, not a crash** — the server "parks" and
+  reconnects on the next request. **Directly confirmed self-healing two nights
+  running (08-11 and 08-12)**: each nightly-maintenance session's own tool
+  bootstrap parked BOTH servers at startup (last agent.log lines — 03:00 on 08-11,
+  02:59 on 08-12), yet later in that same session `codegraph` and `basic-memory`
+  both reconnected and their tools became callable — so the park→reconnect
+  contract is observed end-to-end, not just assumed, and is now reproduced, not a
+  one-off. Don't read the line count as a crisis; it's the startup-race retry
+  path. Only chase it if `hermes mcp list` shows a server actually disabled or a
+  live tool call fails after the reconnect. (This class postdates the 08-09 03:03
+  nightly reflection, which is why runbooks through 08-09 list "only Discord DNS
+  noise" in errors.log; conversely the Discord DNS/liveness-probe class has stayed
+  **quiet since 08-11** — last real line 08-10 21:56, 0 on both 08-11 and 08-12 —
+  so errors.log is now essentially all MCP-parking noise.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
