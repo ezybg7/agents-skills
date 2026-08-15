@@ -142,6 +142,13 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   `auto: no changes; llm: skipped (consolidation off)` — seeded 70 / checked
   72 / archived 0, ~0.5s, 0 tokens. A token-spending run only happens if
   someone flips `curator.consolidate: true` or runs `--consolidate`.
+- **Cadence is ~weekly, confirmed through 08-14 (`run_count=4`).** Observed runs:
+  07-24 (`run_count=1`), 07-31 (2), 08-07 (3), **08-14 18:22 (4)** — each ~7 days
+  apart, every one `auto: no changes; llm: skipped (consolidation off)`, ~0.5s, 0
+  tokens. The 08-14 run matched the projection the nightly runbook made on 08-10,
+  so the 7-day rhythm is now a four-point pattern, not a guess; **next run due
+  ~08-21**. An unchanged `.curator_state` mtime between those dates is expected, not
+  a stall. State lives at `~/agents/skills/.curator_state` (gitignored).
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
@@ -294,8 +301,8 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   reconnect is requested` (WARNING level, `unhandled errors in a TaskGroup`).
   Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, 1,026 total by
   03:00 on 08-11, 1,588 total by 03:00 on 08-12, 2,150 total by 03:00 on 08-13)
-  — steady-state dominant errors.log class for five nights running, not a one-off
-  spike. **NEW 08-14: don't trust a single cumulative "N total by 03:00" number —
+  — steady-state dominant errors.log class for six nights running (08-10→08-15),
+  not a one-off spike. **NEW 08-14: don't trust a single cumulative "N total by 03:00" number —
   `errors.log` ROTATES.** It rotated at **08-13 11:35** (the old 2 MB file is now
   `errors.log.1`; the live `errors.log` starts fresh at that timestamp), so the
   running "2,150-and-growing" counter reset to 0 mid-day 08-13. The durable signal
@@ -305,19 +312,24 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   errors.log | grep -c 2026-08-DD`) and remember to add `errors.log.1` if you need
   a window that predates the rotation. It is **graceful degradation, not a crash**
   — the server "parks" and reconnects on the next request. **Directly confirmed
-  self-healing four nights running (08-11, 08-12, 08-13 and 08-14)**: each
+  self-healing five nights running (08-11, 08-12, 08-13, 08-14 and 08-15)**: each
   nightly-maintenance session's own tool bootstrap parked BOTH servers at startup
   (last agent.log/errors.log lines — 03:00 on 08-11, 02:59 on 08-12, 02:53–02:58
-  on 08-13, 02:53–02:57 on 08-14), yet later in that same session `codegraph` and
-  `basic-memory` both reconnected and their tools (`codegraph_explore`,
+  on 08-13, 02:53–02:57 on 08-14, 03:01 on 08-15 — the 08-15 run also logged an
+  explicit `MCP server 'basic-memory': attempting revival … rebuilding transport`
+  INFO line between the park and the reconnect), yet later in that same session
+  `codegraph` and `basic-memory` both reconnected and their tools (`codegraph_explore`,
   `mcp__basic-memory__*`) became callable — so the park→reconnect contract is
-  observed end-to-end, not just assumed, and is now reproduced four times, not a
-  one-off. Don't read the line count as a crisis; it's the startup-race retry
+  observed end-to-end, not just assumed, and is now reproduced five times, not a
+  one-off. The **per-day park rate is steady** — the live post-rotation errors.log
+  held 925 parks by 03:01 08-15 (291 on 08-13 post-rotation + **562 across the full
+  08-14 day** + 72 in the 08-15 bootstrap), i.e. ~562/day, not accelerating. Don't
+  read the line count as a crisis; it's the startup-race retry
   path. Only chase it if `hermes mcp list` shows a server actually disabled or a
   live tool call fails after the reconnect. (This class postdates the 08-09 03:03
   nightly reflection, which is why runbooks through 08-09 list "only Discord DNS
   noise" in errors.log; conversely the Discord DNS/liveness-probe class has stayed
-  **quiet since 08-11** — last real line 08-10 21:56, 0 on 08-11 through 08-14 —
+  **quiet since 08-11** — last real line 08-10 21:56, 0 on 08-11 through 08-15 —
   so errors.log is now essentially all MCP-parking noise.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
