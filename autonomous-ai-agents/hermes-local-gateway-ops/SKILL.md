@@ -73,6 +73,24 @@ backup, mempressure).
   config-iteration signature, not a crash loop).
   `gateway-shutdown-diag.log` stays 0 bytes; exit-diag is the only
   lifecycle source of truth.
+- **Boot-time Discord DNS failure → cron-only graceful degradation (seen 2026-08-15
+  13:38).** A `gateway.start` fired at **08-15 17:38:21 UTC / 13:38:21 local** (pid
+  731 — the first `gateway.start` in exit-diag since 07-20, i.e. a long uptime/diag
+  gap, effectively a cold start), and its initial Discord adapter connect **failed
+  on a transient DNS blip**: `[Discord] Failed to connect to Discord: Cannot connect
+  to host discord.com:443 … nodename nor servname provided, or not known`
+  (`ClientConnectorDNSError`), then `✗ discord failed to connect`. The gateway did
+  **not** die — it logged `Gateway started with no connected platforms — 1
+  platform(s) queued for retry`, `Gateway will continue for cron job execution`, and
+  started a **reconnection watcher** (retry attempt 2 at 13:38:53 timed out after
+  30s, next retry 60s; by 13:40:27 the adapter reached `Skipping … slash command
+  sync: same fingerprint already synced`, i.e. a later attempt progressed). This is
+  the same graceful-degradation shape as the MCP-parking self-heal, and it is **why
+  the 03:00 nightly cron still ran** even when Discord was (at least initially)
+  disconnected. Distinct from the periodic `gateway-*.discord.gg` liveness-probe DNS
+  noise (still 0 in the live errors.log). Only worry if the reconnection watcher
+  never succeeds (Discord stays down for real user messages) — the transient boot
+  blip self-recovers.
 
 ## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
 
@@ -301,7 +319,7 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   reconnect is requested` (WARNING level, `unhandled errors in a TaskGroup`).
   Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, 1,026 total by
   03:00 on 08-11, 1,588 total by 03:00 on 08-12, 2,150 total by 03:00 on 08-13)
-  — steady-state dominant errors.log class for six nights running (08-10→08-15),
+  — steady-state dominant errors.log class for seven nights running (08-10→08-16),
   not a one-off spike. **NEW 08-14: don't trust a single cumulative "N total by 03:00" number —
   `errors.log` ROTATES.** It rotated at **08-13 11:35** (the old 2 MB file is now
   `errors.log.1`; the live `errors.log` starts fresh at that timestamp), so the
@@ -312,25 +330,34 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   errors.log | grep -c 2026-08-DD`) and remember to add `errors.log.1` if you need
   a window that predates the rotation. It is **graceful degradation, not a crash**
   — the server "parks" and reconnects on the next request. **Directly confirmed
-  self-healing five nights running (08-11, 08-12, 08-13, 08-14 and 08-15)**: each
+  self-healing six nights running (08-11 through 08-16)**: each
   nightly-maintenance session's own tool bootstrap parked BOTH servers at startup
   (last agent.log/errors.log lines — 03:00 on 08-11, 02:59 on 08-12, 02:53–02:58
-  on 08-13, 02:53–02:57 on 08-14, 03:01 on 08-15 — the 08-15 run also logged an
-  explicit `MCP server 'basic-memory': attempting revival … rebuilding transport`
-  INFO line between the park and the reconnect), yet later in that same session
+  on 08-13, 02:53–02:57 on 08-14, 03:01 on 08-15, and 08-16 in TWO cycles at
+  02:55 then a 03:00 self-probe revival — the 08-15 and 08-16 runs both logged an
+  explicit `MCP server '<name>': attempting revival … rebuilding transport` INFO
+  line between the park and the reconnect, on 08-16 for BOTH servers at 03:00:20/21),
+  yet later in that same session
   `codegraph` and `basic-memory` both reconnected and their tools (`codegraph_explore`,
   `mcp__basic-memory__*`) became callable — so the park→reconnect contract is
-  observed end-to-end, not just assumed, and is now reproduced five times, not a
+  observed end-to-end, not just assumed, and is now reproduced six times, not a
   one-off. The **per-day park rate is steady** — the live post-rotation errors.log
-  held 925 parks by 03:01 08-15 (291 on 08-13 post-rotation + **562 across the full
-  08-14 day** + 72 in the 08-15 bootstrap), i.e. ~562/day, not accelerating. Don't
+  held **1,486 parks by 03:00 08-16** (291 on 08-13 post-rotation + 562 across the
+  full 08-14 day + **561 across the full 08-15 day** + 72 in tonight's two-cycle
+  08-16 bootstrap), i.e. ~561/day and flat (562→561 across 08-14→08-15), not
+  accelerating. Don't
   read the line count as a crisis; it's the startup-race retry
   path. Only chase it if `hermes mcp list` shows a server actually disabled or a
   live tool call fails after the reconnect. (This class postdates the 08-09 03:03
   nightly reflection, which is why runbooks through 08-09 list "only Discord DNS
-  noise" in errors.log; conversely the Discord DNS/liveness-probe class has stayed
-  **quiet since 08-11** — last real line 08-10 21:56, 0 on 08-11 through 08-15 —
-  so errors.log is now essentially all MCP-parking noise.)
+  noise" in errors.log; conversely the periodic Discord `gateway-*.discord.gg`
+  liveness-probe DNS class has stayed **quiet since 08-11** — last real line
+  08-10 21:56, 0 on 08-11 through 08-16 in the live errors.log — so errors.log is
+  now essentially all MCP-parking noise. **Do not confuse that quiet probe class
+  with the one-off 08-15 13:38 adapter-connect DNS failure** (`discord.com:443`
+  unresolvable, 1 ERROR + traceback = 2 `ClientConnectorDNSError` grep hits) — a
+  different code path (`hermes_plugins.discord_platform.adapter`, at gateway boot,
+  not the periodic probe); see §"Restart & exit-diagnostics triage".)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
