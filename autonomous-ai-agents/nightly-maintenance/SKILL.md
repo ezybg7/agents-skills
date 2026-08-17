@@ -36,10 +36,10 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06/07/08/09/10/11/12/13/14/15 and 08-16 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06/07/08/09/10/11/12/13/14/15/16 and 08-17 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
-  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-15 the only new
-  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-15` — and infra
+  has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-17 the only new
+  `claude-*.json` is tonight's own 0-byte `reflect-2026-08-17` — and infra
   logs routine EXCEPT one genuinely new class (see below): the Discord DNS offline-probe
   noise (`ClientConnectorDNSError: gateway-*.discord.gg` — the "frozen at 08-03" claim
   in prior runbooks was stale) has itself stayed quiet since 08-11, so errors.log now appends
@@ -105,16 +105,27 @@ task prompt, not the clock.
   *why tonight's 03:00 cron still ran* despite Discord being initially disconnected. Recorded in
   `hermes-local-gateway-ops` §"Restart & exit-diagnostics triage" + §"Behavior that is normal". Curator unchanged
   (run_count=4, 08-14 18:22; next due ~08-21).
+  **08-17 confirmed the flat rate an eighth night and closed the loop on the 08-15 blip:** the live post-rotation
+  `errors.log` holds **2,048 parks by 02:59 08-17** and the per-day rate is *still flat* — 562 (08-14), 561 (08-15),
+  **562 (08-16)**, 72 in tonight's 02:59 bootstrap — MCP-parking dominant an *eighth* night, not accelerating;
+  self-heal was **reproduced a seventh consecutive night** (tonight's 02:59 bootstrap parked both servers — last
+  errors.log lines are the `codegraph` 02:59:35 + `basic-memory` 02:59:41 08-17 parks — yet `mcp__codegraph__*`
+  /`mcp__basic-memory__*` surfaced this run). The genuinely new *negative* fact: the **08-15 13:38 adapter DNS
+  failure has NOT recurred** — exit-diag shows no new `gateway.start` after the 08-15 17:38 UTC pid-731 one through
+  08-17, so that boot blip stays a one-off (the 2 `ClientConnectorDNSError` grep hits in the live errors.log are
+  still that single event's traceback body, not a fresh failure), and the periodic Discord probe class stayed 0
+  (08-11 through 08-17). Curator unchanged (run_count=4, 08-14 18:22; next due ~08-21). Recorded in
+  `hermes-local-gateway-ops` §"Behavior that is normal" + §"Restart & exit-diagnostics triage".
   (mem % and ollama `/v1/models` were **not re-probed on 08-04→10** — `vm_stat` and `curl localhost`
   are both sandbox-gated; the idle call rests on the worker-session + log-class evidence, which
   doesn't need them — earlier idle nights read ~74% free / ollama 200s.)) That's
-  **twenty-four consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
+  **twenty-five consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
   idle streak is itself the expected steady state here,
   not a sign something is broken; keep making one honest runbook refinement rather than inventing edits.
   Note "SKILLS-idle" is independent of the MEMORY task —
   **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01, 08-02, 08-03,
   08-04, 08-05, 08-06, 08-07, 08-08 and 08-09 were idle on *both* (08-02's 07-25, 08-03's 07-26, 08-04's 07-27, 08-05's 07-28, 08-06's 07-29, 08-07's 07-30, 08-08's 07-31 and 08-09's 08-01 folds were all verified no-ops).
-  **08-10 through 08-16 are all the inverse of the 07-29/31 case**: each had a verified-no-op MEMORY fold (08-10's 08-02 → archive; 08-11's 08-03 → archive; 08-12's 08-04 → archive; 08-13's 08-05 → archive; 08-14's 08-06 → archive; 08-15's 08-07 → archive; 08-16's 08-08 → archive) but a *non-empty* SKILLS side — 08-10 first captured the MCP-parking class, 08-11 refined it with the steady-state-dominant volume + the first in-session end-to-end reconnect confirmation, 08-12 refined it again with the third-night-dominant volume (1,588 total parks) + the *second consecutive* in-session self-heal, 08-13 refined it a fourth time (2,150 total parks, *third consecutive* self-heal), 08-14 added the rotation caveat (errors.log rolled 08-13 11:35 → track the per-day rate, not the cumulative total) + the *fourth consecutive* in-session self-heal, 08-15 confirmed the sixth-night-dominant per-day rate (562 parks on 08-14) + the *fifth consecutive* in-session self-heal + the curator's projected 08-14 run (run_count 3→4, weekly cadence held), and 08-16 confirmed the *flat* per-day rate (561 on 08-15, 1,486 live total) + the *sixth consecutive* self-heal + surfaced a genuinely new non-parking finding (the 08-15 13:38 boot-time Discord-adapter DNS failure → cron-only graceful degradation, which is why the 03:00 cron still ran). So an idle worker-session count doesn't mean nothing to record; read the logs before declaring a pure no-op. On an idle day
+  **08-10 through 08-17 are all the inverse of the 07-29/31 case**: each had a verified-no-op MEMORY fold (08-10's 08-02 → archive; 08-11's 08-03 → archive; 08-12's 08-04 → archive; 08-13's 08-05 → archive; 08-14's 08-06 → archive; 08-15's 08-07 → archive; 08-16's 08-08 → archive; 08-17's 08-09 → archive) but a *non-empty* SKILLS side — 08-10 first captured the MCP-parking class, 08-11 refined it with the steady-state-dominant volume + the first in-session end-to-end reconnect confirmation, 08-12 refined it again with the third-night-dominant volume (1,588 total parks) + the *second consecutive* in-session self-heal, 08-13 refined it a fourth time (2,150 total parks, *third consecutive* self-heal), 08-14 added the rotation caveat (errors.log rolled 08-13 11:35 → track the per-day rate, not the cumulative total) + the *fourth consecutive* in-session self-heal, 08-15 confirmed the sixth-night-dominant per-day rate (562 parks on 08-14) + the *fifth consecutive* in-session self-heal + the curator's projected 08-14 run (run_count 3→4, weekly cadence held), 08-16 confirmed the *flat* per-day rate (561 on 08-15, 1,486 live total) + the *sixth consecutive* self-heal + surfaced a genuinely new non-parking finding (the 08-15 13:38 boot-time Discord-adapter DNS failure → cron-only graceful degradation, which is why the 03:00 cron still ran), and 08-17 confirmed the rate flat an *eighth* night (562 on 08-16, 2,048 live parks by 02:59) + the *seventh consecutive* self-heal + closed the loop on that 08-15 finding as a one-off (no new `gateway.start` through 08-17, so the adapter DNS failure did not recur). So an idle worker-session count doesn't mean nothing to record; read the logs before declaring a pure no-op. On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -345,6 +356,20 @@ task prompt, not the clock.
     but **all** are already in the Status board (nightly-pull-routine folded 07-31 at `pantry.md` line 111, the other
     two 07-29 at lines 109–110; #9 merged / #10 open at lines 106–108 and the ANTHROPIC_API_KEY prereq in the 07-20
     entries). 08-08 opened no feature branch of its own → verified no-op, nothing lost.
+  - **08-09 (folded 08-17) was another earned no-op — the pattern-hunt came up empty.** 08-09 was a
+    `## Nightly reflection` log (it archived 08-01). Diffed section-by-section: its SKILLS half was idle-day
+    runbook upkeep (branch `nightly-2026-08-09`, 1 commit: added 08-09 to the idle-days list as the 17th
+    consecutive night + noted the curator's ~weekly cadence so an unchanged run_count reads as expected),
+    committed in the skills repo. Its MEMORY half was the 08-01 verified no-op fold already recorded above
+    (provenance line 24). Its health note — a chained `||`/`;` command tripping the "multiple operations …
+    requires approval" gate, so a git op was re-run as a single `git -C` call — is already in the
+    `claude-worker-env` skill (and this runbook's Environment quick-refs). Its standing carry-overs named the
+    fold-worthy pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
+    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
+    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board below
+    (nightly-pull-routine folded 07-31 at line 112, the other two 07-29 at lines 110–111; #9 merged / #10 open at
+    lines 107–109 and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-09 opened no feature branch of its
+    own → verified no-op, nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
