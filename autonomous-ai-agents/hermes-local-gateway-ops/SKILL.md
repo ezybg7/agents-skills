@@ -319,52 +319,65 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   reconnect is requested` (WARNING level, `unhandled errors in a TaskGroup`).
   Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, 1,026 total by
   03:00 on 08-11, 1,588 total by 03:00 on 08-12, 2,150 total by 03:00 on 08-13)
-  — steady-state dominant errors.log class for nine nights running (08-10→08-18),
+  — steady-state dominant errors.log class for ten nights running (08-10→08-19),
   not a one-off spike. **NEW 08-14: don't trust a single cumulative "N total by 03:00" number —
-  `errors.log` ROTATES.** It rotated at **08-13 11:35** (the old 2 MB file is now
-  `errors.log.1`; the live `errors.log` starts fresh at that timestamp), so the
-  running "2,150-and-growing" counter reset to 0 mid-day 08-13. The durable signal
-  is the **per-day park rate** (hundreds/day: the live file already holds 361 parks
-  — 291 on 08-13 post-rotation + 70 in tonight's 02:53–02:57 08-14 bootstrap), NOT
-  a monotonic total across files; count per-date (`grep 'parking until a reconnect'
-  errors.log | grep -c 2026-08-DD`) and remember to add `errors.log.1` if you need
-  a window that predates the rotation. It is **graceful degradation, not a crash**
+  `errors.log` ROTATES, and it has now rotated TWICE** (08-13 11:35 → the old file became
+  `errors.log.1`; then again **08-18 11:15:32** → that file became `errors.log.1` and the
+  08-13 one aged to `errors.log.2`). The live `errors.log` currently starts at **08-18 11:15:36**,
+  so any cumulative counter resets at each rotation. The durable signal
+  is the **per-day park rate**, NOT a monotonic total across files; count per-date
+  (`grep 'parking until a reconnect' errors.log | grep -c 2026-08-DD`) and add the
+  right rotated file for a full day that straddles a rotation — e.g. **full-day 08-18 = 562**
+  = 263 (in `errors.log.1`, before the 11:15 roll) + 299 (in the live file, after it).
+  **Two live-file metrics dropped to 0 tonight (08-19) purely as rotation artifacts, not signal:**
+  the cumulative park total (reset by the 08-18 roll) and the `ClientConnectorDNSError` count
+  (the 08-15 traceback body moved into `errors.log.1`) — check the rotated files before reading
+  either "0" as a change. It is **graceful degradation, not a crash**
   — the server "parks" and reconnects on the next request. **Directly confirmed
-  self-healing eight nights running (08-11 through 08-18)**: each
-  nightly-maintenance session's own tool bootstrap parked BOTH servers at startup
-  (last agent.log/errors.log lines — 03:00 on 08-11, 02:59 on 08-12, 02:53–02:58
-  on 08-13, 02:53–02:57 on 08-14, 03:01 on 08-15, 08-16 in TWO cycles at
-  02:55 then a 03:00 self-probe revival, 02:59 on 08-17, and 08-18 in THREE cycles
-  at 02:48/02:53/02:58 — the 08-15 and 08-16 runs both logged an
-  explicit `MCP server '<name>': attempting revival … rebuilding transport` INFO
-  line between the park and the reconnect, on 08-16 for BOTH servers at 03:00:20/21
-  (08-18's bootstrap was plain park→reconnect with no revival INFO line)),
-  yet later in that same session
-  `codegraph` and `basic-memory` both reconnected and their tools (`codegraph_explore`,
-  `mcp__basic-memory__*`) became callable — so the park→reconnect contract is
-  observed end-to-end, not just assumed, and is now reproduced eight times, not a
-  one-off. The **per-day park rate is steady** — the live post-rotation errors.log
-  held **2,610 parks by 02:58 08-18** (291 on 08-13 post-rotation + 562 across the
-  full 08-14 day + **561 across the full 08-15 day** + **562 across the full 08-16 day** + **564 across the full 08-17 day** + 70 in tonight's
-  02:48–02:58 08-18 bootstrap), i.e. ~562/day and flat (562→561→562→564 across 08-14→08-17), not
-  accelerating. Don't
-  read the line count as a crisis; it's the startup-race retry
+  self-healing nine nights running (08-11 through 08-19)**: each
+  nightly-maintenance session sees BOTH servers park and its own explicit tool
+  calls reconnect them (`codegraph_explore` / `mcp__basic-memory__*` become
+  callable later in the same run) — the park→reconnect contract observed
+  end-to-end, not assumed, reproduced nine times.
+  **NEW 08-19 — the park is a PERIODIC ~5-min self-probe cycle, not a startup burst,
+  and this corrects the 08-18 note.** Counting a full day shows a park PAIR (codegraph
+  then basic-memory, ~4s apart) every ~5 minutes all day long (tonight: 00:03, 00:08,
+  00:13 … 02:52, 02:57 — 35 cycles × 2 = 70 by 02:57); the "N in tonight's 02:5x bootstrap"
+  framing of earlier notes was just the tail of that cycle visible in the log's last lines,
+  not a distinct startup event. Each cycle logs an `MCP server '<name>': attempting revival
+  after initial connection failures (self-probe or explicit reconnect request); rebuilding
+  transport` line — but that line is **INFO-level, so it lands in `agent.log`, NOT `errors.log`**
+  (errors.log is WARNING+, i.e. parks only). That is why last night's errors.log-only check
+  wrongly called 08-18 "a plain park→reconnect with no revival INFO line": **08-18 in fact had
+  562 revival INFO lines in agent.log** — exactly one per park (park count == revival count each
+  day: 562==562 on 08-18, 70==70 so far on 08-19). Because it is a fixed-period timer (≈288
+  slots/day × 2 servers ≈ 576 max), the per-day total is **flat by construction** (~562/day, the
+  ~2.5% shortfall is occasional missed slots), which is the real reason the rate never accelerates.
+  The periodic self-probe keeps failing+re-parking (the gateway's own probe can't reach the
+  servers), but an **explicit tool call** in a live session does reconnect — hence "reconnects on
+  demand." The **per-day park rate is steady and flat a tenth night** —
+  562 (08-14) → 561 (08-15) → 562 (08-16) → 564 (08-17) → **562 (08-18, = 263 in `errors.log.1`
+  + 299 in the live file)**, with 70 so far in tonight's 08-19 cycle by 02:57. Not
+  accelerating (see the timer explanation above). Don't
+  read the line count as a crisis; it's the periodic self-probe retry
   path. Only chase it if `hermes mcp list` shows a server actually disabled or a
   live tool call fails after the reconnect. (This class postdates the 08-09 03:03
   nightly reflection, which is why runbooks through 08-09 list "only Discord DNS
   noise" in errors.log; conversely the periodic Discord `gateway-*.discord.gg`
   liveness-probe DNS class has stayed **quiet since 08-11** — last real line
-  08-10 21:56, 0 on 08-11 through 08-18 in the live errors.log — so errors.log is
+  08-10 21:56, 0 on 08-11 through 08-19 — so errors.log is
   now essentially all MCP-parking noise. **Do not confuse that quiet probe class
   with the one-off 08-15 13:38 adapter-connect DNS failure** (`discord.com:443`
   unresolvable, 1 ERROR + traceback = 2 `ClientConnectorDNSError` grep hits) — a
   different code path (`hermes_plugins.discord_platform.adapter`, at gateway boot,
   not the periodic probe); see §"Restart & exit-diagnostics triage". **That 08-15
   adapter DNS failure has NOT recurred:** exit-diag shows no new `gateway.start`
-  after the 08-15 17:38 UTC pid-731 one through 08-18, so it stays a one-off boot
-  blip, and the 2 `ClientConnectorDNSError` grep hits in the live errors.log are
-  still that single 08-15 event's traceback body, not a fresh failure — now
-  confirmed quiet a second night running (08-17 and 08-18).)
+  after the 08-15 17:38 UTC pid-731 one through 08-19 (still 28 starts total, last is
+  pid 731), so it stays a one-off boot blip — confirmed quiet a **third** night now
+  (08-17, 08-18, 08-19). Caveat: the live errors.log `ClientConnectorDNSError` count is
+  **0 as of 08-19 only because the 08-18 11:15 rotation moved that traceback into
+  `errors.log.1`** — it is a rotation artifact, not fresh confirmation; grep the rotated
+  file to see the original 08-15 event.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 

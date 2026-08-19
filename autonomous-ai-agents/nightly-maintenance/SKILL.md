@@ -36,7 +36,7 @@ task prompt, not the clock.
     since the last nightly? (look past the last `done (...)` line).
   - `~/.hermes/logs/errors.log`, `gateway.log`, `~/agents/logs/{mempressure,ollama}.log`,
     and curator state (`~/agents/skills/.curator_state` mtime) for infra events.
-- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06/07/08/09/10/11/12/13/14/15/16/17 and 08-18 were all idle for
+- **Idle days are normal and frequent** (07-22/23/24/26/27/28/29/30/31, 08-01/02/03/04/05/06/07/08/09/10/11/12/13/14/15/16/17/18 and 08-19 were all idle for
   the SKILLS task: no new worker session since the last nightly — worker-runner.log
   has only lock-exit noise past `done (nightly-pull-routine)` on 07-23; on 08-17 the only new
   `claude-*.json` is tonight's own 0-byte `reflect-2026-08-17` — and infra
@@ -127,16 +127,32 @@ task prompt, not the clock.
   hits are still that single event's traceback), and the periodic Discord probe class stayed 0 (08-11 through 08-18).
   Curator unchanged (run_count=4, 08-14 18:22; next due ~08-21). Recorded in `hermes-local-gateway-ops`
   §"Behavior that is normal".
+  **08-19 confirmed the flat rate a tenth night AND reframed the whole park class + corrected the 08-18 note:**
+  the biggest finding is that the MCP park is a **periodic ~5-min self-probe cycle**, not a startup burst — counting a
+  full day shows a park PAIR (`codegraph` then `basic-memory`) every ~5 minutes from 00:03 onward (tonight 35 cycles ×
+  2 = 70 by 02:57), and **each cycle emits an `attempting revival … rebuilding transport` INFO line that lands in
+  `agent.log`, not `errors.log`** (errors.log is WARNING+). So park count **==** revival count each day (562==562 on
+  08-18, 70==70 so far on 08-19), and last night's errors.log-only check was wrong to call 08-18 "a plain
+  park→reconnect with NO revival INFO line" — **08-18 actually had 562 revival INFO lines in agent.log**. Because it's a
+  fixed-period timer (~288 slots/day × 2 ≈ 576 max), the per-day total is flat *by construction* (~562/day), which is
+  the real reason it never accelerates; self-heal is thus **reproduced a ninth consecutive night** (both servers park,
+  explicit tool calls reconnect them, `mcp__codegraph__*`/`mcp__basic-memory__*` surfaced this run). Second genuine
+  fact: **`errors.log` rotated a SECOND time (08-18 11:15:32)** — full-day 08-18 = **562** = 263 (`errors.log.1`,
+  pre-11:15) + 299 (live file, post) — and two live-file metrics "dropped to 0" tonight purely as rotation artifacts
+  (the cumulative park total; the `ClientConnectorDNSError` traceback, now in `errors.log.1`), NOT as change. The 08-15
+  adapter DNS blip still has NOT recurred (still 28 `gateway.start` total, last pid 731; quiet a *third* night). Curator
+  unchanged (run_count=4, 08-14 18:22; next ~08-21). Recorded in `hermes-local-gateway-ops` §"Behavior that is normal" +
+  §"Restart & exit-diagnostics triage".
   (mem % and ollama `/v1/models` were **not re-probed on 08-04→10** — `vm_stat` and `curl localhost`
   are both sandbox-gated; the idle call rests on the worker-session + log-class evidence, which
   doesn't need them — earlier idle nights read ~74% free / ollama 200s.)) That's
-  **twenty-six consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
+  **twenty-seven consecutive SKILLS-idle nights** now (since the last real worker session on 07-23) — a long
   idle streak is itself the expected steady state here,
   not a sign something is broken; keep making one honest runbook refinement rather than inventing edits.
   Note "SKILLS-idle" is independent of the MEMORY task —
   **07-29 and 07-31 were both SKILLS-idle yet had a real fold** (see Task 2), while 07-30, 08-01, 08-02, 08-03,
   08-04, 08-05, 08-06, 08-07, 08-08 and 08-09 were idle on *both* (08-02's 07-25, 08-03's 07-26, 08-04's 07-27, 08-05's 07-28, 08-06's 07-29, 08-07's 07-30, 08-08's 07-31 and 08-09's 08-01 folds were all verified no-ops).
-  **08-10 through 08-18 are all the inverse of the 07-29/31 case**: each had a verified-no-op MEMORY fold (08-10's 08-02 → archive; 08-11's 08-03 → archive; 08-12's 08-04 → archive; 08-13's 08-05 → archive; 08-14's 08-06 → archive; 08-15's 08-07 → archive; 08-16's 08-08 → archive; 08-17's 08-09 → archive; 08-18's 08-10 → archive) but a *non-empty* SKILLS side — 08-10 first captured the MCP-parking class, 08-11 refined it with the steady-state-dominant volume + the first in-session end-to-end reconnect confirmation, 08-12 refined it again with the third-night-dominant volume (1,588 total parks) + the *second consecutive* in-session self-heal, 08-13 refined it a fourth time (2,150 total parks, *third consecutive* self-heal), 08-14 added the rotation caveat (errors.log rolled 08-13 11:35 → track the per-day rate, not the cumulative total) + the *fourth consecutive* in-session self-heal, 08-15 confirmed the sixth-night-dominant per-day rate (562 parks on 08-14) + the *fifth consecutive* in-session self-heal + the curator's projected 08-14 run (run_count 3→4, weekly cadence held), 08-16 confirmed the *flat* per-day rate (561 on 08-15, 1,486 live total) + the *sixth consecutive* self-heal + surfaced a genuinely new non-parking finding (the 08-15 13:38 boot-time Discord-adapter DNS failure → cron-only graceful degradation, which is why the 03:00 cron still ran), 08-17 confirmed the rate flat an *eighth* night (562 on 08-16, 2,048 live parks by 02:59) + the *seventh consecutive* self-heal + closed the loop on that 08-15 finding as a one-off (no new `gateway.start` through 08-17, so the adapter DNS failure did not recur), and 08-18 confirmed the rate flat a *ninth* night (564 on 08-17, 2,610 live parks by 02:58) + the *eighth consecutive* self-heal (this one a plain park→reconnect with no revival INFO line) + the 08-15 blip quiet a second night. So an idle worker-session count doesn't mean nothing to record; read the logs before declaring a pure no-op. On an idle day
+  **08-10 through 08-19 are all the inverse of the 07-29/31 case**: each had a verified-no-op MEMORY fold (08-10's 08-02 → archive; 08-11's 08-03 → archive; 08-12's 08-04 → archive; 08-13's 08-05 → archive; 08-14's 08-06 → archive; 08-15's 08-07 → archive; 08-16's 08-08 → archive; 08-17's 08-09 → archive; 08-18's 08-10 → archive; 08-19's 08-11 → archive) but a *non-empty* SKILLS side — 08-10 first captured the MCP-parking class, 08-11 refined it with the steady-state-dominant volume + the first in-session end-to-end reconnect confirmation, 08-12 refined it again with the third-night-dominant volume (1,588 total parks) + the *second consecutive* in-session self-heal, 08-13 refined it a fourth time (2,150 total parks, *third consecutive* self-heal), 08-14 added the rotation caveat (errors.log rolled 08-13 11:35 → track the per-day rate, not the cumulative total) + the *fourth consecutive* in-session self-heal, 08-15 confirmed the sixth-night-dominant per-day rate (562 parks on 08-14) + the *fifth consecutive* in-session self-heal + the curator's projected 08-14 run (run_count 3→4, weekly cadence held), 08-16 confirmed the *flat* per-day rate (561 on 08-15, 1,486 live total) + the *sixth consecutive* self-heal + surfaced a genuinely new non-parking finding (the 08-15 13:38 boot-time Discord-adapter DNS failure → cron-only graceful degradation, which is why the 03:00 cron still ran), 08-17 confirmed the rate flat an *eighth* night (562 on 08-16, 2,048 live parks by 02:59) + the *seventh consecutive* self-heal + closed the loop on that 08-15 finding as a one-off (no new `gateway.start` through 08-17, so the adapter DNS failure did not recur), 08-18 confirmed the rate flat a *ninth* night (564 on 08-17) + the *eighth consecutive* self-heal + the 08-15 blip quiet a second night, and 08-19 confirmed the rate flat a *tenth* night (562 on 08-18 = 263+299 across the second rotation) + the *ninth consecutive* self-heal + **reframed the class as a periodic ~5-min self-probe cycle** (park count == revival count; revival INFO lines live in agent.log, correcting the 08-18 "no revival line" note) + logged the second errors.log rotation (08-18 11:15) + the 08-15 blip quiet a third night. So an idle worker-session count doesn't mean nothing to record; read the logs before declaring a pure no-op. On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -393,6 +409,17 @@ task prompt, not the clock.
     (#9 merged) and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board (nightly-pull-routine
     folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries).
     08-10 opened no feature branch of its own → verified no-op, nothing lost.
+  - **08-11 (folded 08-19) was another earned no-op — the pattern-hunt came up empty.** 08-11 was a
+    `## Nightly reflection` log (it archived 08-03). Diffed section-by-section: 08-11 was **SKILLS-idle-but-real-finding**
+    — it refined the MCP-parking class with the steady-state-dominant volume + the *first* in-session end-to-end
+    reconnect confirmation, both already codified in `hermes-local-gateway-ops` §"Behavior that is normal" (and further
+    refined every night since — tonight's 08-19 reframe supersedes it). Its MEMORY half was the 08-03 verified no-op
+    fold already recorded above (`pantry.md` line 26). Its standing carry-overs named the fold-worthy pattern — the three
+    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`
+    incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #10 review (#9 merged) and the
+    ANTHROPIC_API_KEY prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other
+    two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-11 opened no feature
+    branch of its own → verified no-op, nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
