@@ -319,7 +319,7 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   reconnect is requested` (WARNING level, `unhandled errors in a TaskGroup`).
   Volume is high (~1,578 lines on 08-09, ~280 by 03:00 on 08-10, 1,026 total by
   03:00 on 08-11, 1,588 total by 03:00 on 08-12, 2,150 total by 03:00 on 08-13)
-  — steady-state dominant errors.log class for ten nights running (08-10→08-19),
+  — steady-state dominant errors.log class for eleven nights running (08-10→08-20),
   not a one-off spike. **NEW 08-14: don't trust a single cumulative "N total by 03:00" number —
   `errors.log` ROTATES, and it has now rotated TWICE** (08-13 11:35 → the old file became
   `errors.log.1`; then again **08-18 11:15:32** → that file became `errors.log.1` and the
@@ -334,11 +334,11 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   (the 08-15 traceback body moved into `errors.log.1`) — check the rotated files before reading
   either "0" as a change. It is **graceful degradation, not a crash**
   — the server "parks" and reconnects on the next request. **Directly confirmed
-  self-healing nine nights running (08-11 through 08-19)**: each
+  self-healing ten nights running (08-11 through 08-20)**: each
   nightly-maintenance session sees BOTH servers park and its own explicit tool
   calls reconnect them (`codegraph_explore` / `mcp__basic-memory__*` become
   callable later in the same run) — the park→reconnect contract observed
-  end-to-end, not assumed, reproduced nine times.
+  end-to-end, not assumed, reproduced ten times.
   **NEW 08-19 — the park is a PERIODIC ~5-min self-probe cycle, not a startup burst,
   and this corrects the 08-18 note.** Counting a full day shows a park PAIR (codegraph
   then basic-memory, ~4s apart) every ~5 minutes all day long (tonight: 00:03, 00:08,
@@ -355,9 +355,13 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   ~2.5% shortfall is occasional missed slots), which is the real reason the rate never accelerates.
   The periodic self-probe keeps failing+re-parking (the gateway's own probe can't reach the
   servers), but an **explicit tool call** in a live session does reconnect — hence "reconnects on
-  demand." The **per-day park rate is steady and flat a tenth night** —
+  demand." The **per-day park rate is steady and flat an eleventh night** —
   562 (08-14) → 561 (08-15) → 562 (08-16) → 564 (08-17) → **562 (08-18, = 263 in `errors.log.1`
-  + 299 in the live file)**, with 70 so far in tonight's 08-19 cycle by 02:57. Not
+  + 299 in the live file)** then **562 (08-19)** confirmed full-day, with **70 so far
+  in tonight's 08-20 cycle by 02:57** (last live errors.log lines are the `codegraph`
+  02:57:02 + `basic-memory` 02:57:06 08-20 parks). **08-19's full day now confirms the
+  timer model end-to-end**: 562 parks in errors.log == 562 `attempting revival` INFO lines
+  in agent.log, exactly the per-park pairing the periodic-cycle reframe predicted. Not
   accelerating (see the timer explanation above). Don't
   read the line count as a crisis; it's the periodic self-probe retry
   path. Only chase it if `hermes mcp list` shows a server actually disabled or a
@@ -365,17 +369,17 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   nightly reflection, which is why runbooks through 08-09 list "only Discord DNS
   noise" in errors.log; conversely the periodic Discord `gateway-*.discord.gg`
   liveness-probe DNS class has stayed **quiet since 08-11** — last real line
-  08-10 21:56, 0 on 08-11 through 08-19 — so errors.log is
+  08-10 21:56, 0 on 08-11 through 08-20 — so errors.log is
   now essentially all MCP-parking noise. **Do not confuse that quiet probe class
   with the one-off 08-15 13:38 adapter-connect DNS failure** (`discord.com:443`
   unresolvable, 1 ERROR + traceback = 2 `ClientConnectorDNSError` grep hits) — a
   different code path (`hermes_plugins.discord_platform.adapter`, at gateway boot,
   not the periodic probe); see §"Restart & exit-diagnostics triage". **That 08-15
   adapter DNS failure has NOT recurred:** exit-diag shows no new `gateway.start`
-  after the 08-15 17:38 UTC pid-731 one through 08-19 (still 28 starts total, last is
-  pid 731), so it stays a one-off boot blip — confirmed quiet a **third** night now
-  (08-17, 08-18, 08-19). Caveat: the live errors.log `ClientConnectorDNSError` count is
-  **0 as of 08-19 only because the 08-18 11:15 rotation moved that traceback into
+  after the 08-15 17:38 UTC pid-731 one through 08-20 (still 28 starts total, last is
+  pid 731), so it stays a one-off boot blip — confirmed quiet a **fourth** night now
+  (08-17, 08-18, 08-19, 08-20). Caveat: the live errors.log `ClientConnectorDNSError` count is
+  **0 as of 08-20 only because the 08-18 11:15 rotation moved that traceback into
   `errors.log.1`** — it is a rotation artifact, not fresh confirmation; grep the rotated
   file to see the original 08-15 event.)
 
