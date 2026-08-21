@@ -91,6 +91,20 @@ backup, mempressure).
   noise (still 0 in the live errors.log). Only worry if the reconnection watcher
   never succeeds (Discord stays down for real user messages) — the transient boot
   blip self-recovers.
+  **NEW 2026-08-20 — this blip RECURS on restart; it is NOT a one-off.** After the
+  08-15 pid-731 event stayed quiet 4 nights, TWO more `gateway.start`s fired on
+  08-20 afternoon — **pid 728 @ 13:48:41 local (17:48:41 UTC)** and **pid 725 @
+  14:25:17 local (18:25:17 UTC)** (exit-diag `gateway.start` total 28→30) — and
+  **each hit the same `discord.com:443` `ClientConnectorDNSError` at boot** (live
+  errors.log ERROR lines 13:48:44, 14:25:19, 14:25:49; live `ClientConnectorDNSError`
+  grep count rose 2→6). Both degraded gracefully exactly as the 08-15 model predicts:
+  the pid-725 boot logged `Reconnect discord failed, next retry in 60s` → retried →
+  `[Discord] Connected as orchestrator#5798` → `✓ discord reconnected successfully`
+  at **14:27:15**, ~2 min after boot. So treat the boot-time adapter DNS failure as
+  an **expected transient on every (re)start**, self-healing within a few minutes;
+  it is not tied to a single 08-15 cold start. (agent.log confirms the recovery:
+  normal `discord.gateway: … successfully RESUMED session` keepalives resume
+  08-20 21:13 → 08-21 02:11.)
 
 ## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
 
@@ -382,6 +396,23 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   **0 as of 08-20 only because the 08-18 11:15 rotation moved that traceback into
   `errors.log.1`** — it is a rotation artifact, not fresh confirmation; grep the rotated
   file to see the original 08-15 event.)
+  **NEW 2026-08-20/21 — the flat ~562/day MCP-parking era ENDED; the periodic self-probe
+  cycle stopped and has not resumed.** The last park is **08-20 13:32:11** (`basic-memory`)
+  and the last `attempting revival` INFO line is **08-20 13:32:04** — both cease together,
+  once more confirming the park==revival pairing (08-20 got **318** of each before stopping,
+  a partial day, not the full ~562, precisely because the cycle halted at 13:32). Since then:
+  **0 parks and 0 revival lines** from 08-20 13:32 through 08-21 03:00+ (the old ~5-min cadence
+  would have logged ~160 in that 13.5 h window), and the live `errors.log` has had **no writes
+  at all since 08-20 14:25**. Yet the MCP servers are plainly healthy — the `mcp__codegraph__*`
+  / `mcp__basic-memory__*` tools surfaced and were callable in tonight's 08-21 session. The halt
+  coincides with the two 08-20 gateway restarts (pid 728 @ 13:48, pid 725 @ 14:25; see §"Restart
+  & exit-diagnostics triage"): **the current gateway (pid 725) simply keeps the MCP transports
+  connected, so the self-probe→park→revive loop no longer fires.** Operational takeaway: an
+  **empty** park stream is now the healthy state, not a silent failure — verify via a live tool
+  call (which works) or `hermes mcp list`, not by expecting the old ~562/day WARNING volume. This
+  also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
+  tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
+  across the next restart, or whether it returns to the timer-driven flat rate.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
