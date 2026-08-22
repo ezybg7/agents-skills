@@ -105,6 +105,24 @@ backup, mempressure).
   it is not tied to a single 08-15 cold start. (agent.log confirms the recovery:
   normal `discord.gateway: … successfully RESUMED session` keepalives resume
   08-20 21:13 → 08-21 02:11.)
+  **NEW 2026-08-22 — the blip ALSO recurs with NO gateway restart (a mid-run
+  reconnect), not only on (re)start.** At **08-21 04:16–04:22** the adapter hit the
+  same `discord.com:443` `ClientConnectorDNSError` while the SAME gateway (pid 725,
+  up since 08-20 14:25) kept running — exit-diag shows **no new `gateway.start`**
+  (total held at **30**, last still pid 725), so this was NOT a restart. It began as
+  a **liveness-probe failure** — agent.log `[Discord] Discord liveness probe failed
+  (1/3): Cannot connect to host discord.com:443` at 04:16:46 — which tripped
+  `discord.client: Attempting a reconnect in …` back-offs, then gateway.log
+  `Reconnecting discord (attempt 3/4)` with `Reconnect discord failed, next retry in
+  120s`, self-healing to `[Discord] Connected as orchestrator#5798` + `✓ discord
+  reconnected successfully` at **04:22:36** (~6 min). It landed right after the daily
+  ~04:00 session reset (`session_reset … at_hour 4`). So generalize the rule: the
+  `discord.com:443` adapter DNS failure is a **transient on ANY (re)connect —
+  gateway restart OR a mid-run liveness-probe reconnect** — and self-heals within a
+  few minutes via the reconnection watcher; a `gateway.start` is NOT a prerequisite.
+  This single 04:20:33 ERROR + traceback is also the **only** write to the live
+  `errors.log` since 08-20 14:25 (MCP-parking has added nothing — see §"Behavior
+  that is normal").
 
 ## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
 
@@ -174,13 +192,30 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   `auto: no changes; llm: skipped (consolidation off)` — seeded 70 / checked
   72 / archived 0, ~0.5s, 0 tokens. A token-spending run only happens if
   someone flips `curator.consolidate: true` or runs `--consolidate`.
-- **Cadence is ~weekly, confirmed through 08-14 (`run_count=4`).** Observed runs:
-  07-24 (`run_count=1`), 07-31 (2), 08-07 (3), **08-14 18:22 (4)** — each ~7 days
-  apart, every one `auto: no changes; llm: skipped (consolidation off)`, ~0.5s, 0
-  tokens. The 08-14 run matched the projection the nightly runbook made on 08-10,
-  so the 7-day rhythm is now a four-point pattern, not a guess; **next run due
-  ~08-21**. An unchanged `.curator_state` mtime between those dates is expected, not
-  a stall. State lives at `~/agents/skills/.curator_state` (gitignored).
+- **Cadence is ~weekly, confirmed through 08-21 (`run_count=5`).** Observed runs:
+  07-24 (`run_count=1`), 07-31 (2), 08-07 (3), 08-14 18:22 (4), **08-21 14:27 local /
+  18:27 UTC (5)** — each ~7 days apart, held a **fifth** consecutive point exactly on
+  the projected date. **next run due ~08-28**. An unchanged `.curator_state` mtime
+  between those dates is expected, not a stall. State lives at
+  `~/agents/skills/.curator_state` (gitignored).
+- **NEW 2026-08-22 — the 08-21 run is the FIRST-ever non-"no changes" run: `auto: 2
+  marked stale`.** Runs 1–4 were all `auto: no changes`; the 08-21 run (`run_count=5`,
+  0.42s, still `llm: skipped (consolidation off)`, 0 tokens) checked 72 and did its
+  first real auto-transition — **2 skills active→stale, 0 archived, 0 reactivated**.
+  `run.json` doesn't name them but `.usage.json` does (`state: "stale"`): **`claude-code`**
+  (last invoked 2026-07-18) and **`hermes-agent`** (last invoked 2026-07-19) — both
+  **product-reference** skills ~34 days idle, both `pinned: false`, neither
+  nightly-maintained, so this is benign and needs no action (stale ≠ archived; the
+  time-to-archive threshold is longer, and archive is reversible). But it is the
+  **first live proof of the invocation-driven staleness mechanism** this section warns
+  about: staleness is driven by skill *invocation*, not file edits, so a maintained-but-
+  never-invoked skill really does age toward stale. **Watch item:** of the three
+  nightly-maintained skills, only `hermes-local-gateway-ops` is in `.usage.json` (still
+  `active`, last_used 08-19 — kept fresh only because the nightly reads it), and it is
+  **`pinned: false`**; `nightly-maintenance` and `claude-worker-env` aren't in the usage
+  sidecar at all. None are stale yet, but if a maintained skill ever appears in the
+  stale set, `hermes curator pin <name>` (the CLI is likely worker-gated — flag it for
+  Everett) before it can reach `archive_after_days`.
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
@@ -413,6 +448,16 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
+  **CONFIRMED 2026-08-22 — parking stayed gone a SECOND night; empty stream is holding.** Both
+  **08-21 = 0 parks and 08-22 = 0 parks** in the live errors.log, and still **no new `gateway.start`**
+  (exit-diag total held at 30, pid 725 up since 08-20 14:25), so the current gateway is still holding
+  the MCP transports connected and the self-probe→park loop remains dorment by design — not a silent
+  failure: `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced and were callable in tonight's
+  session. So "empty park stream = healthy" is now observed two nights running, still with no
+  intervening restart (the open watch — does parking return after the *next* restart — is unresolved
+  because none has happened yet). The only errors.log write in this whole window is the single
+  08-21 04:20 Discord-adapter DNS blip (a no-restart reconnect; see §"Restart & exit-diagnostics
+  triage"), NOT a park.
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
