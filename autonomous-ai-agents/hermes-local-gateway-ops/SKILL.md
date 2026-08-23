@@ -458,6 +458,18 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   because none has happened yet). The only errors.log write in this whole window is the single
   08-21 04:20 Discord-adapter DNS blip (a no-restart reconnect; see §"Restart & exit-diagnostics
   triage"), NOT a park.
+  **CONFIRMED 2026-08-23 — parking gone a THIRD night, and the live errors.log is now fully
+  silent ~2 days.** 08-23 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23
+  are all zero, and the single 08-21 04:20:33 Discord-adapter DNS ERROR+traceback is STILL the only
+  write to the live errors.log — nothing has been logged there for ~47 h (08-21 04:20 → 08-23 03:00),
+  neither park nor DNS blip. Gateway pid 725 is still up (no new `gateway.start`; agent.log shows
+  normal `discord.gateway: … successfully RESUMED session` keepalives right through **08-23 01:26**),
+  and `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced and were callable in tonight's session —
+  so an empty park stream + a silent errors.log is the healthy holding state, verified by a live tool
+  call (not by log volume) a third night running. Curator unchanged (run_count=5, 08-21 14:27; next
+  ~08-28). The open watch — does parking return after the *next* restart — is STILL unresolved: no
+  restart has happened since pid 725 came up 08-20 14:25, so a silent stream can't yet be distinguished
+  from a would-be-silent-anyway one until a restart re-tests the transports.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
