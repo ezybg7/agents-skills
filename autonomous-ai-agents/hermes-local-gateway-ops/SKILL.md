@@ -470,6 +470,19 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   ~08-28). The open watch — does parking return after the *next* restart — is STILL unresolved: no
   restart has happened since pid 725 came up 08-20 14:25, so a silent stream can't yet be distinguished
   from a would-be-silent-anyway one until a restart re-tests the transports.)
+  **CONFIRMED 2026-08-24 — parking gone a FOURTH night; errors.log now silent ~71 h and unchanged.**
+  08-24 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23/08-24 are all zero, and the
+  live `errors.log` STILL ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback — nothing
+  at all has been appended for ~71 h (08-21 04:20 → 08-24 03:00), neither a park nor a DNS blip. Gateway pid
+  725 is still up (exit-diag `gateway.start` held at **30**, last pid 725; no new restart) and
+  `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live
+  call is permission-gated in the worker sandbox, so "tools surfaced" is the same liveness signal used the
+  prior nights), so "empty park stream + silent errors.log = healthy" is verified live a **fourth** night.
+  Curator unchanged (run_count=5, 08-21 14:27; next ~08-28). The open watch — does parking return after the
+  *next* restart — is STILL unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still
+  can't be distinguished from a would-be-silent-anyway one until a restart re-tests the transports. The 08-21
+  Discord-adapter DNS blip likewise had **no (re)connect event to re-test it** this window (pid stable, only
+  DNS-cache-warm RESUMEs), so its non-recurrence is "untested," not new evidence.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
