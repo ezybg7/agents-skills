@@ -498,6 +498,22 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   08-20 14:25, so a silent stream still can't be distinguished from a would-be-silent-anyway one until a restart
   re-tests the transports; the 08-21 DNS blip likewise had no (re)connect event to re-test it this window, so its
   non-recurrence stays "untested," not new evidence.)
+  **CONFIRMED 2026-08-26 — parking gone a SIXTH night; errors.log now silent ~119 h and unchanged.**
+  08-26 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23/08-24/08-25/08-26 are all zero, and the
+  live `errors.log` STILL ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback (the file's mtime is
+  itself unchanged at 08-21 04:20, a cheap way to confirm zero writes without grepping) — nothing at all has been appended
+  for ~119 h (08-21 04:20 → 08-26 03:00), neither a park nor a DNS blip. Gateway pid 725 is still up (exit-diag
+  `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~5.5 days since
+  08-20 14:25) and `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the
+  live call is permission-gated in the worker sandbox, so "tools surfaced" is the same liveness signal used the prior
+  nights), and agent.log shows normal `discord.gateway: … successfully RESUMED session` keepalives right through
+  **08-26 02:32**, so "empty park stream + silent errors.log = healthy" is verified live a **sixth** night. Curator
+  unchanged (run_count=5, 08-21 14:27; **next due ~08-28, now ~2 days out** — still the nearest thing on any axis that
+  could actually change, so re-check `.curator_state` mtime the next two nights). The open watch — does parking return
+  after the *next* restart — is STILL unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still
+  can't be distinguished from a would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip
+  likewise had no (re)connect event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays
+  "untested," not new evidence.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
