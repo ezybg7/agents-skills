@@ -514,6 +514,22 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   can't be distinguished from a would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip
   likewise had no (re)connect event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays
   "untested," not new evidence.)
+  **CONFIRMED 2026-08-27 — parking gone a SEVENTH night; errors.log now silent ~143 h and unchanged.**
+  08-27 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-27 are all zero, and the live `errors.log` STILL
+  ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback (the file's mtime is itself frozen at 08-21
+  04:20 — a cheap zero-writes check, unchanged from 08-26) — nothing at all appended for ~143 h (08-21 04:20 → 08-27
+  03:00), neither a park nor a DNS blip. Gateway pid 725 is still up (exit-diag `gateway.start` held at **30**, last pid
+  725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~6.5 days since 08-20 14:25) and `mcp__codegraph__*` /
+  `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live call is permission-gated in the
+  worker sandbox, so "tools surfaced" is the same liveness signal used the prior nights), and agent.log shows normal
+  `discord.gateway: … successfully RESUMED session` keepalives right through **08-27 02:38**, so "empty park stream +
+  silent errors.log = healthy" is verified live a **seventh** night. **Curator is now the imminent axis:** unchanged at
+  run_count=5, 08-21 14:27, but **next due ~08-28 = ~1 day out** — its ~weekly runs land in the early afternoon, so
+  re-check `.curator_state` mtime / `run_count` on the **08-28** nightly (a 6th run, likely another `auto: … stale`, is
+  the one thing on any axis expected to change). The open watch — does parking return after the *next* restart — is STILL
+  unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still can't be distinguished from a
+  would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip likewise had no (re)connect
+  event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays "untested," not new evidence.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
