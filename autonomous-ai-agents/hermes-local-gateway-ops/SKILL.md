@@ -123,6 +123,31 @@ backup, mempressure).
   This single 04:20:33 ERROR + traceback is also the **only** write to the live
   `errors.log` since 08-20 14:25 (MCP-parking has added nothing — see §"Behavior
   that is normal").
+  **NEW 2026-08-28 — a DISTINCT Discord failure signature: a gateway WEBSOCKET 503,
+  not the adapter DNS blip.** The ~143 h errors.log silence (08-21 04:20 → 08-27,
+  reported by the 08-27 nightly) **ended at 08-27 05:20:16** with exactly ONE new
+  event (errors.log by-date count for 08-27 == 1): `ERROR discord.client: Attempting
+  a reconnect in 0.87s`, whose traceback is
+  `aiohttp.client_exceptions.WSServerHandshakeError: 503, message='Invalid response
+  status', url='wss://gateway-us-east1-d.discord.gg/?v=10&encoding=json&compress=zlib-stream'`.
+  This is a **different code path and failure mode** from every prior Discord error
+  in this runbook: it is the **Discord gateway websocket handshake being 503'd by
+  Discord's edge** (server-side "high demand"/transient rejection on the `discord.py`
+  `discord.client` layer), NOT the `hermes_plugins.discord_platform.adapter`
+  `discord.com:443` `ClientConnectorDNSError` DNS-resolution class (§ above) and NOT
+  the periodic `gateway-*.discord.gg` liveness-probe DNS class. It **self-healed
+  within pid 725 in ~8 s and required no restart** — `discord.py`'s own reconnect
+  backoff fired (`reconnect in 0.87s`), the shard re-handshook, and gateway.log logged
+  `[Discord] Connected as orchestrator#5798` at **05:20:24** (`gateway.start` still
+  **30**, pid 725, so no `gateway.exit_nonzero`/restart), after which agent.log resumed
+  its normal `successfully RESUMED session` keepalives. Treat a Discord gateway
+  `WSServerHandshakeError: 503` like the transient Gemini 503 (§"Gemini free-tier
+  limits") — `discord.py` retries it automatically and it recovers in seconds; only
+  worry if the reconnect backoff never lands `Connected as orchestrator#5798`. Note it
+  did NOT bring back MCP-parking (that loop is tied to the MCP transports / a
+  `gateway.start`, not a Discord shard resume — last park still 08-20 13:32; see
+  §"Behavior that is normal"), so it does not resolve the still-open post-restart
+  parking-return watch.
 
 ## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
 
@@ -530,6 +555,24 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still can't be distinguished from a
   would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip likewise had no (re)connect
   event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays "untested," not new evidence.)
+  **CONFIRMED 2026-08-28 — parking gone an EIGHTH night, but the errors.log silence BROKE (a new Discord WS-503, not a park).**
+  08-28 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-28 are all zero and the MCP self-probe→park loop is still
+  dormant by design (pid 725 keeps the transports connected). BUT the ~143 h "errors.log frozen at 08-21 04:20" state the last six
+  nightlies reported is **over**: the live file grew to 944 KB / mtime **08-27 05:20:16** and its **only** new write since 08-21 is a
+  single 08-27 05:20:16 `discord.client` reconnect ERROR — a **Discord gateway `WSServerHandshakeError: 503`** that self-healed within
+  pid 725 in ~8 s with no restart (full detail + why it's a distinct signature from the DNS-blip class is in §"Restart &
+  exit-diagnostics triage"). So the cheap "mtime frozen == zero writes" shortcut is now retired for this window — the frozen-mtime
+  streak ended 08-27, though it stays true that **zero of those writes were parks**. Gateway pid 725 is still up (exit-diag
+  `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~7.7 days since 08-20 14:25),
+  `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live call is worker-sandbox
+  permission-gated, so "tools surfaced" is the liveness signal), and agent.log `discord.gateway: … successfully RESUMED session`
+  keepalives run right through **08-28 02:57:13**, so "empty park stream = healthy" holds an **eighth** night (the "silent errors.log"
+  half no longer applies — read it via a live tool call, not log volume). **Curator did NOT fire on schedule by 03:00:** still
+  `run_count=5`, `.curator_state` mtime still **08-21 14:27** — the projected ~08-28 6th run hasn't landed, exactly as 08-21 itself
+  behaved (its ~weekly runs land in the *early afternoon* 13:27–14:27, after the 03:00 nightly), so re-check `.curator_state`
+  `run_count` on the **08-29** nightly; it remains the nearest thing on any axis expected to change. The open post-restart
+  parking-return watch is STILL unresolved — the 08-27 event was a Discord *shard resume*, not a `gateway.start`, so it did not
+  re-test the MCP transports; only a real restart will.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
