@@ -217,12 +217,14 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   `auto: no changes; llm: skipped (consolidation off)` — seeded 70 / checked
   72 / archived 0, ~0.5s, 0 tokens. A token-spending run only happens if
   someone flips `curator.consolidate: true` or runs `--consolidate`.
-- **Cadence is ~weekly, confirmed through 08-21 (`run_count=5`).** Observed runs:
-  07-24 (`run_count=1`), 07-31 (2), 08-07 (3), 08-14 18:22 (4), **08-21 14:27 local /
-  18:27 UTC (5)** — each ~7 days apart, held a **fifth** consecutive point exactly on
-  the projected date. **next run due ~08-28**. An unchanged `.curator_state` mtime
-  between those dates is expected, not a stall. State lives at
-  `~/agents/skills/.curator_state` (gitignored).
+- **Cadence is ~weekly, confirmed through 08-28 (`run_count=6`).** Observed runs:
+  07-24 (`run_count=1`), 07-31 (2), 08-07 (3), 08-14 18:22 (4), 08-21 14:27 (5),
+  **08-28 18:44:27 local / 22:44 UTC (6)** — each ~7 days apart, held a **sixth**
+  consecutive point (08-21 → 08-28 = exactly 7 days), all in the early-afternoon-to-
+  evening slot, i.e. *after* the 03:00 nightly (which is why the run for a given
+  ~Thursday is only observable on the *next* nightly). **next run due ~09-04.** An
+  unchanged `.curator_state` mtime between those dates is expected, not a stall. State
+  lives at `~/agents/skills/.curator_state` (gitignored).
 - **NEW 2026-08-22 — the 08-21 run is the FIRST-ever non-"no changes" run: `auto: 2
   marked stale`.** Runs 1–4 were all `auto: no changes`; the 08-21 run (`run_count=5`,
   0.42s, still `llm: skipped (consolidation off)`, 0 tokens) checked 72 and did its
@@ -241,6 +243,37 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   sidecar at all. None are stale yet, but if a maintained skill ever appears in the
   stale set, `hermes curator pin <name>` (the CLI is likely worker-gated — flag it for
   Everett) before it can reach `archive_after_days`.
+- **NEW 2026-08-29 — the projected ~08-28 6th run FIRED, and it jumped `auto: 2 marked
+  stale` → `auto: 70 marked stale`.** After six nightlies flagging it as "the imminent
+  axis," the run landed **08-28 18:44:27 local** (`run_count` 5→6, 0.64s, still `llm:
+  skipped (consolidation off)`, 0 tokens; `run.json` `marked_stale:70, archived:0,
+  reactivated:0, checked:72`). The 2→70 jump is **not a mechanism change** — the 70
+  newly-stale skills are *exactly the never-invoked 07-24 seed cohort*: all 70 share
+  `created_at` 2026-07-24 with `last_used_at: null` in `.usage.json`, so a whole
+  same-age batch crossed the staleness line together in one weekly sweep (the 07-24
+  seed + ~35 days ≈ 08-28). Still benign: **0 archived** (stale ≠ archived; archive
+  threshold is longer and reversible), consolidation off so it's only a label.
+  - **Watch-item from 08-22 did NOT trip — no nightly-maintained skill went stale.**
+    `.usage.json` now holds only **2 `active`** skills: **`hermes-local-gateway-ops`**
+    (this skill, `last_used` 08-19, kept fresh because the nightly *reads* it — still
+    `pinned: false`) and **`delegate-to-claude`**. `nightly-maintenance` and
+    `claude-worker-env` are **still absent from the sidecar entirely**, so they can't
+    be marked stale (immune by absence). So the maintained set is safe this run.
+  - **But correct the over-clean "invocation-age → stale" model: the boundary is NOT a
+    simple fixed-days-from-`last_used` cutoff.** `delegate-to-claude` (`last_used`
+    **2026-07-20**, ~39 days idle at the 08-28 run) is **active**, while `claude-code`
+    (07-18) and `hermes-agent` (07-19) — only **1–2 days older** — were marked stale
+    back on 08-21. A pure last_used-age rule can't split 07-18/07-19 (stale) from 07-20
+    (active) while *also* staling the 07-24 cohort. So either the auto-pass doesn't
+    re-evaluate already-`active` skills on the same clock as it seeds new stales, or
+    there's an activity signal beyond the four sidecar timestamps (all of
+    `delegate-to-claude`'s are 07-20). **Left as an open anomaly — do not fabricate the
+    exact threshold.** The durable, verified facts: (a) the 07-24 null-`last_used`
+    cohort staled as a batch; (b) maintained skills are safe *this* run; (c)
+    `hermes-local-gateway-ops` is `pinned: false` and ages on *invocation*, not on the
+    nightly's file-reads (its `last_used` is stuck at 08-19), so if it ever appears in
+    the stale set, `hermes curator pin hermes-local-gateway-ops` (CLI likely
+    worker-gated → flag for Everett) before it can reach `archive_after_days`.
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
@@ -573,6 +606,17 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   `run_count` on the **08-29** nightly; it remains the nearest thing on any axis expected to change. The open post-restart
   parking-return watch is STILL unresolved — the 08-27 event was a Discord *shard resume*, not a `gateway.start`, so it did not
   re-test the MCP transports; only a real restart will.)
+  **CONFIRMED 2026-08-29 — parking gone a NINTH night, errors.log quiet again (the 08-27 WS-503 did not recur), and the curator
+  finally fired (see §"Curator", the real news tonight).** 08-29 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-29
+  are all zero — the MCP self-probe→park loop stays dormant by design (pid 725 holds the transports connected). `errors.log` is
+  back to quiet: its last write is still the single **08-27 05:20:16** Discord WS-503, **0** new writes dated 08-28 or 08-29, so
+  the WS-503 was a one-off self-heal and no error of any class has landed in ~46 h (08-27 05:20 → 08-29 03:00). Gateway pid 725 is
+  still up (exit-diag `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no restart — pid 725 has now held ~8.5 days
+  since 08-20 14:25), `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live
+  call is worker-sandbox permission-gated, so "tools surfaced" is the liveness signal), and agent.log `discord.gateway: …
+  successfully RESUMED session` keepalives run right through **08-29 02:58:26**, so "empty park stream = healthy" holds a **ninth**
+  night. The open post-restart parking-return watch is STILL unresolved — no `gateway.start` since pid 725 came up 08-20 14:25
+  (~9 days), and the 08-27 WS-503 was a Discord *shard resume*, not a restart, so nothing has re-tested the MCP transports yet.)
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
