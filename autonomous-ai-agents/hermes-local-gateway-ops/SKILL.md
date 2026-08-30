@@ -506,117 +506,32 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
-  **CONFIRMED 2026-08-22 — parking stayed gone a SECOND night; empty stream is holding.** Both
-  **08-21 = 0 parks and 08-22 = 0 parks** in the live errors.log, and still **no new `gateway.start`**
-  (exit-diag total held at 30, pid 725 up since 08-20 14:25), so the current gateway is still holding
-  the MCP transports connected and the self-probe→park loop remains dorment by design — not a silent
-  failure: `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced and were callable in tonight's
-  session. So "empty park stream = healthy" is now observed two nights running, still with no
-  intervening restart (the open watch — does parking return after the *next* restart — is unresolved
-  because none has happened yet). The only errors.log write in this whole window is the single
-  08-21 04:20 Discord-adapter DNS blip (a no-restart reconnect; see §"Restart & exit-diagnostics
-  triage"), NOT a park.
-  **CONFIRMED 2026-08-23 — parking gone a THIRD night, and the live errors.log is now fully
-  silent ~2 days.** 08-23 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23
-  are all zero, and the single 08-21 04:20:33 Discord-adapter DNS ERROR+traceback is STILL the only
-  write to the live errors.log — nothing has been logged there for ~47 h (08-21 04:20 → 08-23 03:00),
-  neither park nor DNS blip. Gateway pid 725 is still up (no new `gateway.start`; agent.log shows
-  normal `discord.gateway: … successfully RESUMED session` keepalives right through **08-23 01:26**),
-  and `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced and were callable in tonight's session —
-  so an empty park stream + a silent errors.log is the healthy holding state, verified by a live tool
-  call (not by log volume) a third night running. Curator unchanged (run_count=5, 08-21 14:27; next
-  ~08-28). The open watch — does parking return after the *next* restart — is STILL unresolved: no
-  restart has happened since pid 725 came up 08-20 14:25, so a silent stream can't yet be distinguished
-  from a would-be-silent-anyway one until a restart re-tests the transports.)
-  **CONFIRMED 2026-08-24 — parking gone a FOURTH night; errors.log now silent ~71 h and unchanged.**
-  08-24 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23/08-24 are all zero, and the
-  live `errors.log` STILL ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback — nothing
-  at all has been appended for ~71 h (08-21 04:20 → 08-24 03:00), neither a park nor a DNS blip. Gateway pid
-  725 is still up (exit-diag `gateway.start` held at **30**, last pid 725; no new restart) and
-  `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live
-  call is permission-gated in the worker sandbox, so "tools surfaced" is the same liveness signal used the
-  prior nights), so "empty park stream + silent errors.log = healthy" is verified live a **fourth** night.
-  Curator unchanged (run_count=5, 08-21 14:27; next ~08-28). The open watch — does parking return after the
-  *next* restart — is STILL unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still
-  can't be distinguished from a would-be-silent-anyway one until a restart re-tests the transports. The 08-21
-  Discord-adapter DNS blip likewise had **no (re)connect event to re-test it** this window (pid stable, only
-  DNS-cache-warm RESUMEs), so its non-recurrence is "untested," not new evidence.)
-  **CONFIRMED 2026-08-25 — parking gone a FIFTH night; errors.log now silent ~95 h and unchanged.**
-  08-25 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23/08-24/08-25 are all zero, and the
-  live `errors.log` STILL ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback — nothing at
-  all has been appended for ~95 h (08-21 04:20 → 08-25 03:00), neither a park nor a DNS blip. Gateway pid 725 is
-  still up (exit-diag `gateway.start` held at **30**, last pid 725; no new restart — pid 725 has now held ~4.5 days
-  since 08-20 14:25) and `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport
-  connected — the live call is permission-gated in the worker sandbox, so "tools surfaced" is the same liveness
-  signal used the prior nights), and agent.log shows normal `discord.gateway: … successfully RESUMED session`
-  keepalives right through **08-25 02:45**, so "empty park stream + silent errors.log = healthy" is verified live a
-  **fifth** night. Curator unchanged (run_count=5, 08-21 14:27; **next due ~08-28, now ~3 days out** — the nearest
-  thing on any axis that could actually change, so re-check `.curator_state` mtime the next few nights). The open
-  watch — does parking return after the *next* restart — is STILL unresolved: no restart since pid 725 came up
-  08-20 14:25, so a silent stream still can't be distinguished from a would-be-silent-anyway one until a restart
-  re-tests the transports; the 08-21 DNS blip likewise had no (re)connect event to re-test it this window, so its
-  non-recurrence stays "untested," not new evidence.)
-  **CONFIRMED 2026-08-26 — parking gone a SIXTH night; errors.log now silent ~119 h and unchanged.**
-  08-26 = **0 parks** (last park still **08-20 13:32:11**), so 08-21/08-22/08-23/08-24/08-25/08-26 are all zero, and the
-  live `errors.log` STILL ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback (the file's mtime is
-  itself unchanged at 08-21 04:20, a cheap way to confirm zero writes without grepping) — nothing at all has been appended
-  for ~119 h (08-21 04:20 → 08-26 03:00), neither a park nor a DNS blip. Gateway pid 725 is still up (exit-diag
-  `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~5.5 days since
-  08-20 14:25) and `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the
-  live call is permission-gated in the worker sandbox, so "tools surfaced" is the same liveness signal used the prior
-  nights), and agent.log shows normal `discord.gateway: … successfully RESUMED session` keepalives right through
-  **08-26 02:32**, so "empty park stream + silent errors.log = healthy" is verified live a **sixth** night. Curator
-  unchanged (run_count=5, 08-21 14:27; **next due ~08-28, now ~2 days out** — still the nearest thing on any axis that
-  could actually change, so re-check `.curator_state` mtime the next two nights). The open watch — does parking return
-  after the *next* restart — is STILL unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still
-  can't be distinguished from a would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip
-  likewise had no (re)connect event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays
-  "untested," not new evidence.)
-  **CONFIRMED 2026-08-27 — parking gone a SEVENTH night; errors.log now silent ~143 h and unchanged.**
-  08-27 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-27 are all zero, and the live `errors.log` STILL
-  ends at the single **08-21 04:20:33** Discord-adapter DNS ERROR+traceback (the file's mtime is itself frozen at 08-21
-  04:20 — a cheap zero-writes check, unchanged from 08-26) — nothing at all appended for ~143 h (08-21 04:20 → 08-27
-  03:00), neither a park nor a DNS blip. Gateway pid 725 is still up (exit-diag `gateway.start` held at **30**, last pid
-  725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~6.5 days since 08-20 14:25) and `mcp__codegraph__*` /
-  `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live call is permission-gated in the
-  worker sandbox, so "tools surfaced" is the same liveness signal used the prior nights), and agent.log shows normal
-  `discord.gateway: … successfully RESUMED session` keepalives right through **08-27 02:38**, so "empty park stream +
-  silent errors.log = healthy" is verified live a **seventh** night. **Curator is now the imminent axis:** unchanged at
-  run_count=5, 08-21 14:27, but **next due ~08-28 = ~1 day out** — its ~weekly runs land in the early afternoon, so
-  re-check `.curator_state` mtime / `run_count` on the **08-28** nightly (a 6th run, likely another `auto: … stale`, is
-  the one thing on any axis expected to change). The open watch — does parking return after the *next* restart — is STILL
-  unresolved: no restart since pid 725 came up 08-20 14:25, so a silent stream still can't be distinguished from a
-  would-be-silent-anyway one until a restart re-tests the transports; the 08-21 DNS blip likewise had no (re)connect
-  event to re-test it this window (only DNS-cache-warm RESUMEs), so its non-recurrence stays "untested," not new evidence.)
-  **CONFIRMED 2026-08-28 — parking gone an EIGHTH night, but the errors.log silence BROKE (a new Discord WS-503, not a park).**
-  08-28 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-28 are all zero and the MCP self-probe→park loop is still
-  dormant by design (pid 725 keeps the transports connected). BUT the ~143 h "errors.log frozen at 08-21 04:20" state the last six
-  nightlies reported is **over**: the live file grew to 944 KB / mtime **08-27 05:20:16** and its **only** new write since 08-21 is a
-  single 08-27 05:20:16 `discord.client` reconnect ERROR — a **Discord gateway `WSServerHandshakeError: 503`** that self-healed within
-  pid 725 in ~8 s with no restart (full detail + why it's a distinct signature from the DNS-blip class is in §"Restart &
-  exit-diagnostics triage"). So the cheap "mtime frozen == zero writes" shortcut is now retired for this window — the frozen-mtime
-  streak ended 08-27, though it stays true that **zero of those writes were parks**. Gateway pid 725 is still up (exit-diag
-  `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no new restart — pid 725 has now held ~7.7 days since 08-20 14:25),
-  `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live call is worker-sandbox
-  permission-gated, so "tools surfaced" is the liveness signal), and agent.log `discord.gateway: … successfully RESUMED session`
-  keepalives run right through **08-28 02:57:13**, so "empty park stream = healthy" holds an **eighth** night (the "silent errors.log"
-  half no longer applies — read it via a live tool call, not log volume). **Curator did NOT fire on schedule by 03:00:** still
-  `run_count=5`, `.curator_state` mtime still **08-21 14:27** — the projected ~08-28 6th run hasn't landed, exactly as 08-21 itself
-  behaved (its ~weekly runs land in the *early afternoon* 13:27–14:27, after the 03:00 nightly), so re-check `.curator_state`
-  `run_count` on the **08-29** nightly; it remains the nearest thing on any axis expected to change. The open post-restart
-  parking-return watch is STILL unresolved — the 08-27 event was a Discord *shard resume*, not a `gateway.start`, so it did not
-  re-test the MCP transports; only a real restart will.)
-  **CONFIRMED 2026-08-29 — parking gone a NINTH night, errors.log quiet again (the 08-27 WS-503 did not recur), and the curator
-  finally fired (see §"Curator", the real news tonight).** 08-29 = **0 parks** (last park still **08-20 13:32:11**), so 08-21→08-29
-  are all zero — the MCP self-probe→park loop stays dormant by design (pid 725 holds the transports connected). `errors.log` is
-  back to quiet: its last write is still the single **08-27 05:20:16** Discord WS-503, **0** new writes dated 08-28 or 08-29, so
-  the WS-503 was a one-off self-heal and no error of any class has landed in ~46 h (08-27 05:20 → 08-29 03:00). Gateway pid 725 is
-  still up (exit-diag `gateway.start` held at **30**, last pid 725 @ 08-20 18:25 UTC; no restart — pid 725 has now held ~8.5 days
-  since 08-20 14:25), `mcp__codegraph__*` / `mcp__basic-memory__*` surfaced in tonight's session (transport connected — the live
-  call is worker-sandbox permission-gated, so "tools surfaced" is the liveness signal), and agent.log `discord.gateway: …
-  successfully RESUMED session` keepalives run right through **08-29 02:58:26**, so "empty park stream = healthy" holds a **ninth**
-  night. The open post-restart parking-return watch is STILL unresolved — no `gateway.start` since pid 725 came up 08-20 14:25
-  (~9 days), and the 08-27 WS-503 was a Discord *shard resume*, not a restart, so nothing has re-tested the MCP transports yet.)
+  **ROLLING 2026-08-21 → 2026-08-30 — the empty-park-stream era is holding (consolidated from the
+  per-night CONFIRMED ledger, 08-22…08-29, which had grown to one near-identical paragraph per night;
+  collapsed on the 2026-08-30 nightly — no durable fact dropped, every distinct event is in the two
+  sections cross-referenced below).** Parking has stayed gone **ten consecutive nights (08-21 through
+  08-30, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
+  MCP self-probe→park→revive loop stays **dormant by design** — the current gateway (**pid 725**, up
+  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~9.5 days) keeps
+  the codegraph/basic-memory transports connected, so the ~5-min timer never fires. **So "empty park
+  stream = healthy" is the steady state** — verify via a live tool call (`mcp__codegraph__*` /
+  `mcp__basic-memory__*` surface each session; the call itself is worker-sandbox permission-gated) or
+  `hermes mcp list`, **never by the old ~562/day WARNING volume**. Across this whole 10-night window the
+  live `errors.log` took only **two** writes, **neither a park**, both a *distinct* Discord signature and
+  both self-healed inside pid 725 with no restart (full detail in §"Restart & exit-diagnostics triage"):
+  the single **08-21 04:20:33** adapter `discord.com:443` `ClientConnectorDNSError` DNS blip, and the
+  single **08-27 05:20:16** gateway `WSServerHandshakeError: 503`. The WS-503 did **not** recur — **0
+  writes dated 08-28 / 08-29 / 08-30** — so errors.log has been quiet ~70 h again (08-27 05:20 → 08-30
+  03:00) with that WS-503 still its last line, and agent.log `discord.gateway: … successfully RESUMED
+  session` keepalives run right through **08-30 01:57:36**. (The per-night "silent for N h / mtime
+  frozen" shortcut earlier nightlies used is **retired** — errors.log now carries those two self-heal
+  writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Still-open watch
+  (unchanged all ten nights):** does parking *return* after the next restart? No `gateway.start` since
+  pid 725 came up 08-20 14:25 (~9.5 d), and neither the 08-21 DNS blip nor the 08-27 WS-503 was a
+  restart (both were in-place reconnects / shard resumes that did not re-test the MCP transports), so a
+  genuinely-silent stream still can't be distinguished from a would-be-silent-anyway one until a real
+  restart re-tests them. Curator is no longer the imminent axis — it fired 08-28 18:44 (`run_count`
+  5→6, `auto: 70 marked stale`), next ~09-04 (see §"Curator").
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
