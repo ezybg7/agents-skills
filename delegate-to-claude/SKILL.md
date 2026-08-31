@@ -78,6 +78,15 @@ Multi-file code changes, deep research, tasks failed twice locally.
    When a RESUME hard-fails with "No conversation found", do NOT re-fire the
    RESUME (the id is wrong or the conversation aged out) — re-queue as a FRESH
    `<slug>.task` that inlines the original goal plus the user's answer.
+   (2026-08-30 confirmed this a SECOND time, and here the id was almost certainly
+   right but the conversation had simply aged out: `resume-merge-authorization`
+   FAILED at 10:08:17 with `No conversation found with session ID: d70f30fd-…` —
+   an attempt to continue a much-earlier merge-authorization session that no
+   longer existed. So a FAILED `resume-*` task is NOT an infra fault; sessions
+   expire, and stale ones must be relaunched fresh, never resumed. It is unrelated
+   to any coincident gateway noise — a Discord WS-503 and a `tools.registry …
+   unavailable this turn` cascade shared that 10:08 timestamp but neither caused
+   the resume failure; see `hermes-local-gateway-ops`.)
 6. If your own reply/narration dies mid-turn (e.g. a rate limit), the
    functional work usually completed first — reconstruct status from the
    queue dirs and result JSONs, never from the truncated chat reply.
