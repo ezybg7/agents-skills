@@ -148,6 +148,30 @@ backup, mempressure).
   `gateway.start`, not a Discord shard resume — last park still 08-20 13:32; see
   §"Behavior that is normal"), so it does not resolve the still-open post-restart
   parking-return watch.
+  **NEW 2026-08-31 — the WS-503 is NOT a one-off: it RECURRED 08-30 10:08:14** (a
+  second identical `aiohttp WSServerHandshakeError: 503 … wss://gateway-us-east1-d.discord.gg`,
+  making it a *recurring transient*, ~3.5 days after the 08-27 event). Same benign
+  shape: it **self-healed inside pid 725 with no restart** (`gateway.start` still
+  **30**, agent.log `successfully RESUMED session` keepalives continue through
+  08-31 01:53:44), so the "treat like a transient Gemini 503" rule holds — the only
+  update is that it is now proven to recur, not a single 08-27 fluke. **Two coincident
+  details worth pinning for triage** (both at ~10:08 on 08-30, right at the errors.log
+  write): (a) it was immediately followed by a cascade of `tools.registry: check_fn
+  <name> returned False; dependent tools will be unavailable this turn` WARNINGs
+  (`_browser_cdp_check`, `_browser_dialog_check`, `check_close_terminal_requirements`,
+  `check_computer_use_requirements`, `check_image_generation_requirements`,
+  `_check_kanban_mode`, `check_read_terminal_requirements`, `check_web_api_key`) — that
+  cascade is the **normal headless-worker tool-registry noise** (§"Behavior that is
+  normal"), NOT part of the Discord failure, it just shares the timestamp; (b) it
+  coincided with the worker task **`resume-merge-authorization` FAILED at 10:08:17**
+  — an **aged-out-session RESUME**, not an infra fault (result JSON: `No conversation
+  found with session ID: d70f30fd-…`; see `delegate-to-claude` — a `resume-<slug>`
+  fails when the target Claude session has expired, the 2nd live occurrence of that
+  mode after 07-21's `resume-vision-model-selection`). Do not read the clustered
+  10:08 WS-503 + registry cascade + FAILED task as one cascading outage — they are
+  three unrelated-but-simultaneous events, all benign. (Operationally notable only in
+  that this — Everett attempting to authorize the nightly-branch merge and the resume
+  aging out — is the first real worker-axis activity since the 08-19 jetson session.)
 
 ## Identifier fabrication — hard rule (sess_12345 incident, 2026-07-20)
 
@@ -509,26 +533,27 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   **ROLLING 2026-08-21 → 2026-08-30 — the empty-park-stream era is holding (consolidated from the
   per-night CONFIRMED ledger, 08-22…08-29, which had grown to one near-identical paragraph per night;
   collapsed on the 2026-08-30 nightly — no durable fact dropped, every distinct event is in the two
-  sections cross-referenced below).** Parking has stayed gone **ten consecutive nights (08-21 through
-  08-30, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
+  sections cross-referenced below).** Parking has stayed gone **eleven consecutive nights (08-21 through
+  08-31, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
   MCP self-probe→park→revive loop stays **dormant by design** — the current gateway (**pid 725**, up
-  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~9.5 days) keeps
+  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~10.9 days) keeps
   the codegraph/basic-memory transports connected, so the ~5-min timer never fires. **So "empty park
   stream = healthy" is the steady state** — verify via a live tool call (`mcp__codegraph__*` /
   `mcp__basic-memory__*` surface each session; the call itself is worker-sandbox permission-gated) or
-  `hermes mcp list`, **never by the old ~562/day WARNING volume**. Across this whole 10-night window the
-  live `errors.log` took only **two** writes, **neither a park**, both a *distinct* Discord signature and
-  both self-healed inside pid 725 with no restart (full detail in §"Restart & exit-diagnostics triage"):
-  the single **08-21 04:20:33** adapter `discord.com:443` `ClientConnectorDNSError` DNS blip, and the
-  single **08-27 05:20:16** gateway `WSServerHandshakeError: 503`. The WS-503 did **not** recur — **0
-  writes dated 08-28 / 08-29 / 08-30** — so errors.log has been quiet ~70 h again (08-27 05:20 → 08-30
-  03:00) with that WS-503 still its last line, and agent.log `discord.gateway: … successfully RESUMED
-  session` keepalives run right through **08-30 01:57:36**. (The per-night "silent for N h / mtime
+  `hermes mcp list`, **never by the old ~562/day WARNING volume**. Across this whole 11-night window the
+  live `errors.log` took only **three** writes, **none a park**, all self-healed inside pid 725 with no
+  restart (full detail in §"Restart & exit-diagnostics triage"): the single **08-21 04:20:33** adapter
+  `discord.com:443` `ClientConnectorDNSError` DNS blip, and the gateway `WSServerHandshakeError: 503`
+  which appeared **08-27 05:20:16** and then **RECURRED 08-30 10:08:14** — so it is a *recurring
+  transient*, not a one-off, and errors.log's long silence is now definitively over (its last write is
+  the 08-30 10:08 WS-503 + the normal headless-worker `tools.registry … unavailable this turn` cascade
+  that shares its timestamp). agent.log `discord.gateway: … successfully RESUMED session` keepalives run
+  right through **08-31 01:53:44**. (The per-night "silent for N h / mtime
   frozen" shortcut earlier nightlies used is **retired** — errors.log now carries those two self-heal
   writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Still-open watch
-  (unchanged all ten nights):** does parking *return* after the next restart? No `gateway.start` since
-  pid 725 came up 08-20 14:25 (~9.5 d), and neither the 08-21 DNS blip nor the 08-27 WS-503 was a
-  restart (both were in-place reconnects / shard resumes that did not re-test the MCP transports), so a
+  (unchanged all eleven nights):** does parking *return* after the next restart? No `gateway.start` since
+  pid 725 came up 08-20 14:25 (~10.9 d), and none of the 08-21 DNS blip / 08-27 / 08-30 WS-503s was a
+  restart (all were in-place reconnects / shard resumes that did not re-test the MCP transports), so a
   genuinely-silent stream still can't be distinguished from a would-be-silent-anyway one until a real
   restart re-tests them. Curator is no longer the imminent axis — it fired 08-28 18:44 (`run_count`
   5→6, `auto: 70 marked stale`), next ~09-04 (see §"Curator").
