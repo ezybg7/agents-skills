@@ -184,7 +184,26 @@ task prompt, not the clock.
   ledger-consolidation candidates — this runbook's OWN Task-1 idle narration and Task-2 fold ledger —
   remain OPEN**: deferred again tonight to prioritize the genuine finding and avoid a risky ~250-line
   verbatim rewrite of the most-relied-on runbook; still the standing reductive-work candidate for a truly
-  idle night. On an idle day
+  idle night.
+  **09-01 is SKILLS-idle on the worker axis a quiet-infra night, and it finally SPENT the standing
+  reductive-work candidate: tonight's main SKILLS act is the deferred Task-2 fold-ledger consolidation
+  (see Task 2 below), not a new finding.** Worker axis: the last real `done` is STILL the 08-19 jetson
+  session (captured 08-20); worker-runner.log shows only lock-exit / "no .task files" noise past it and
+  tonight's own 0-byte `reflect-2026-09-01`. Infra held quiet — recorded in `hermes-local-gateway-ops`
+  (rolling paragraph carried to 09-01): **MCP-parking gone a TWELFTH night** (08-21→09-01 all 0 parks,
+  last park still 08-20 13:32:11, live errors.log holds 1179), `errors.log` **silent ~47 h** (its last
+  write is still the 08-30 10:08:14 WS-503 + `tools.registry` cascade, so the WS-503 did NOT fire a
+  third time — `WSServerHandshakeError` count still 2), gateway **pid 725 up ~11.9 d** no restart
+  (`gateway.start` held at 30), `mcp__codegraph__*`/`mcp__basic-memory__*` tools surfaced + agent.log
+  `RESUMED session` keepalives through 09-01 02:00:35 verify it live, curator unchanged (`run_count=6`,
+  fired 08-28, next ~09-04). **The reductive work:** the Task-2 MEMORY fold ledger below had grown to one
+  near-identical "verified no-op, nothing lost" paragraph per night; collapsed each contiguous no-op run
+  (07-24→08-18 and 08-20→08-23) into ONE rolling bullet — no distinct event dropped, the three genuine
+  folds (07-21, 07-23, 08-19) stay narrated in full, and every fact is cross-referenced to the skill or
+  `pantry.md` line that owns it. **The Task-1 idle narration (this very block, 07-24→now) is now the
+  LAST-remaining consolidation candidate** — deferred tonight to keep the diff to one runbook section; it
+  is the next truly-idle-night reductive target.
+  On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
@@ -241,261 +260,7 @@ task prompt, not the clock.
     this: a pushed-but-un-PR'd feature branch in the log's project section. **That is the pattern to
     hunt** — walk each `##` section, and treat any still-open unmerged branch as fold-worthy until
     you've found it in the project file.
-  - **07-24 (folded 08-01) went back to an earned no-op — the hunt ran and came up empty.** Applied
-    the pattern above: 07-24 is a `## Nightly reflection` log, so I diffed each of its lines. Its two
-    skill findings were already codified — the `git update-index --chmod=+x` (mode `100755`, since
-    `chmod`/`bash -n`/exec are gated on a committed script) fact in `claude-worker-env`, and the
-    `merge-tree --write-tree` branch-drift recipe in `github-workflow`. Its OPEN/standing carry-overs
-    named three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues`) — exactly the fold-worthy pattern — but **all three were
-    already in `pantry.md` Status** (nightly-pull-routine folded 07-31, the other two 07-29). So the
-    hunt confirmed nothing was uncaptured: verified no-op, provenance line added, nothing lost.
-  - **07-25 (folded 08-02) was another earned no-op — the pattern-hunt came up empty.** 07-25 was
-    the *first-ever* archival night (it folded 07-17), so its own log is a `## Nightly reflection`
-    whose durable content is all infra/curator: the **first live curator run** (07-24 13:27) and the
-    box-specific fact that **`~/.hermes/skills` is a symlink to `~/agents/skills`** are both fully
-    captured in `hermes-local-gateway-ops` (§"Curator — first live run"); the `.gitignore` add of
-    `.curator_backups/`+`.archive/` is committed in the skills repo. Its only standing carry-over was
-    the pantry `feat/nightly-pull-routine` un-PR'd branch — already in `pantry.md` Status (folded
-    07-31). No un-captured deliverable of its own → verified no-op, provenance line added, nothing lost.
-  - **07-26 (folded 08-03) was another earned no-op — the pattern-hunt came up empty.** 07-26 was a
-    `## Nightly reflection` log (it archived 07-18). Diffed section-by-section: the two durable facts
-    it folded that night — the Gemini `-latest`-alias pin gotcha and the "receipt image never
-    persisted" privacy invariant — came from 07-18 and are already in `pantry.md` §"AI vision provider
-    gotchas"; its skill work (the `nightly-maintenance` runbook itself, and the `claude-worker-env`
-    chained-`||`/`&&`-fallback fact) is committed in the skills repo; and its lone standing carry-over,
-    the pantry `feat/nightly-pull-routine` un-PR'd branch, is already in the Status board (folded
-    07-31). No un-captured deliverable of its own → verified no-op, provenance line added, nothing lost.
-  - **07-27 (folded 08-04) was another earned no-op — the pattern-hunt came up empty.** 07-27 was a
-    `## Nightly reflection` log (it archived 07-19). Diffed section-by-section: its lone SKILLS finding
-    was self-referential and *already codified in this very runbook* — the runbook's **first live use**
-    caught its own stale "23 commits ahead" and switched to a live `rev-list --count` (see Task 1 above,
-    "corrected on 07-27"). Its MEMORY section was the 07-19 no-op fold, already recorded in `pantry.md`
-    line 11. Its standing carry-overs named the exact fold-worthy pattern — three still-open un-PR'd
-    branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`)
-    plus PR #9/#10 review and the Anthropic-API-key prereq — but **all are already in the Status board**
-    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
-    prereq both in the 07-20 entries). No un-captured deliverable of its own → verified no-op, nothing lost.
-  - **07-28 (folded 08-05) was another earned no-op — the pattern-hunt came up empty.** 07-28 was a
-    `## Nightly reflection` log (it archived 07-20). Diffed section-by-section: its lone SKILLS finding —
-    that a **bare file-glob** (a single unchained `jq -r '.result' …-*.json`) trips the "multiple
-    operations … requires approval" gate, so the trigger is the unresolved glob itself, **not** `||`/`&&`
-    chaining — is already codified in `claude-worker-env` (the gate bullet, tagged "(07-28…)"). Its MEMORY
-    half was the 07-20 no-op fold already recorded in `pantry.md` (line 13). Its standing carry-overs named
-    the fold-worthy pattern — the still-open un-PR'd branches (`feat/nightly-pull-routine`,
-    `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`) plus PR #9/#10 review and the
-    Anthropic-API-key prereq — but **all are already in the Status board** (nightly-pull-routine folded
-    07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries).
-    No un-captured deliverable of its own → verified no-op, nothing lost.
-  - **07-29 (folded 08-06) was another earned no-op — the pattern-hunt came up empty.** 07-29 was a
-    `## Nightly reflection` log (it archived 07-21). Note the twist: 07-29's *own* MEMORY half **was** the
-    first-ever non-no-op fold (it folded 07-21's spec-audit → `chore/spec-audit-tracking-issues` deliverable
-    into Status), but archiving 07-29 tonight is still a no-op because that fold already landed on 07-29
-    (provenance at `pantry.md` line 12). Diffed section-by-section: its SKILLS half was idle-day runbook
-    upkeep (2 commits, committed in the skills repo). Its standing carry-overs named the fold-worthy pattern —
-    the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues`, incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all are already in the Status board**
-    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
-    prereq in the 07-20 entries). No un-captured deliverable of its own → verified no-op, nothing lost.
-  - **07-30 (folded 08-07) was another earned no-op — the pattern-hunt came up empty.** 07-30 was a
-    `## Nightly reflection` log (it archived 07-22, itself a verified no-op). Diffed section-by-section: its
-    SKILLS half was idle-day runbook upkeep (1 commit adding 07-30 to the idle-days list + recording 07-22's
-    clean no-op), committed in the skills repo; the `cd && git` hook-gate it nearly hit is already in this
-    runbook's Environment quick-refs. Its MEMORY half was the 07-22 no-op fold already recorded in `pantry.md`
-    (line 14). Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). No un-captured deliverable of
-    its own → verified no-op, nothing lost.
-  - **07-31 (folded 08-08) was another earned no-op — same twist as 07-29.** 07-31 was a `## Nightly
-    reflection` log (it archived 07-23), and like 07-29 its *own* MEMORY half **was** a real fold — it folded
-    07-23's pantry **`feat/nightly-pull-routine`** deliverable into Status (provenance at `pantry.md` line 15).
-    But archiving 07-31 tonight is still a no-op because that fold already landed on 07-31. Diffed
-    section-by-section: its SKILLS half was idle-day runbook upkeep (1 commit: added 07-31 to the idle-days
-    list, marked it SKILLS-idle-but-real-fold, and recorded the 07-23 fold as the *second* "un-PR'd branch
-    slips through" case) — committed in the skills repo. Its standing carry-overs named the fold-worthy
-    pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board
-    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
-    prereq in the 07-20 entries). No un-captured deliverable of its own → verified no-op, nothing lost.
-  - **08-01 (folded 08-09) was another earned no-op — the pattern-hunt came up empty.** 08-01 was a
-    `## Nightly reflection` log (it archived 07-24). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (1 commit: added 08-01 to the idle-days list, noted the nine-night streak, recorded 07-24's
-    fold as an earned no-op) — committed in the skills repo. Its MEMORY half was the 07-24 verified no-op fold
-    already recorded above (`pantry.md` line 16). Its health note — that a chained `||`/`;` command trips the
-    "multiple operations … requires approval" gate, so `git mv` was re-run as a single call — is already in
-    `claude-worker-env` (the gate bullet). Its standing carry-overs named the fold-worthy pattern — the three
-    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board
-    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
-    prereq in the 07-20 entries). 08-01 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-02 (folded 08-10) was another earned no-op — the pattern-hunt came up empty.** 08-02 was a
-    `## Nightly reflection` log (it archived 07-25). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (1 commit: added 08-02 to the idle-days list, bumped the streak to ten, recorded 07-25's
-    fold as a verified no-op) — committed in the skills repo; its `simple_expansion` for-loop denial note is
-    already in `claude-worker-env` (line 62). Its MEMORY half was the 07-25 verified no-op fold already
-    recorded at `pantry.md` line 17. Its standing carry-overs named the fold-worthy pattern — the three
-    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board
-    (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY
-    prereq in the 07-20 entries). 08-02 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-03 (folded 08-11) was another earned no-op — the pattern-hunt came up empty.** 08-03 was a
-    `## Nightly reflection` log (it archived 07-26). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (1 commit: bumped the idle streak to eleven, logged 07-26's verified no-op fold) — committed
-    in the skills repo. Its MEMORY half was the 07-26 verified no-op fold already recorded at `pantry.md`
-    line 18 — and the two facts 07-26 itself folded (the Gemini `-latest`-alias pin gotcha + the "receipt image
-    never persisted" privacy invariant) are already under `pantry.md` §"AI vision provider gotchas". Its standing
-    carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`,
-    `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18
-    `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the
-    Status board (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the
-    ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-03 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-04 (folded 08-12) was another earned no-op — the pattern-hunt came up empty.** 08-04 was a
-    `## Nightly reflection` log (it archived 07-27). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (1 commit: bumped the idle streak to twelve, logged 07-27's verified no-op fold; noted
-    honestly that mem%/ollama were not re-probed) — committed in the skills repo. Its MEMORY half was the
-    07-27 verified no-op fold already recorded at `pantry.md` line 19 — and the 07-27 fold's own content (its
-    lone SKILLS finding was the runbook's first live use, the `rev-list --count` switch, codified in this very
-    runbook; its MEMORY half was the 07-19 no-op fold at `pantry.md` line 11). Its standing carry-overs named
-    the fold-worthy pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`,
-    `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18
-    `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in
-    the Status board (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the
-    ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-04 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-05 (folded 08-13) was another earned no-op — the pattern-hunt came up empty.** 08-05 was a
-    `## Nightly reflection` log (it archived 07-28). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (1 commit: bumped the idle streak to thirteen, logged 07-28's verified no-op fold) — committed
-    in the skills repo. Its MEMORY half was the 07-28 verified no-op fold already recorded at `pantry.md`
-    line 20 — and 07-28's own durable content (its lone SKILLS finding, the bare-file-glob approval-gate trigger,
-    codified in `claude-worker-env` tagged "(07-28…)"; its 07-20 no-op fold at `pantry.md` line 13) is likewise
-    already captured. Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-05 opened no feature branch of
-    its own → verified no-op, nothing lost.
-  - **08-06 (folded 08-14) was another earned no-op — the pattern-hunt came up empty.** 08-06 was a
-    `## Nightly reflection` log (it archived 07-29). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (branch `nightly-2026-08-06` pushed, 1 commit bumping the idle streak to fourteen + recording
-    07-29's verified no-op fold) — committed in the skills repo. Its MEMORY half was the 07-29 verified no-op fold
-    already recorded at `pantry.md` line 21 — and 07-29's own twist (its *own* MEMORY half was the first-ever real
-    fold, the 07-21 spec-audit deliverable, but that already landed on 07-29 at `pantry.md` line 12) is likewise
-    already captured. Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-06 opened no feature branch of
-    its own → verified no-op, nothing lost.
-  - **08-07 (folded 08-15) was another earned no-op — the pattern-hunt came up empty.** 08-07 was a
-    `## Nightly reflection` log (it archived 07-30, itself a verified no-op). Diffed section-by-section: its SKILLS
-    half was idle-day runbook upkeep (branch `nightly-2026-08-07`, 1 commit bumping the idle streak to fifteen +
-    recording 07-30's verified no-op fold) — committed in the skills repo. Its MEMORY half was the 07-30 verified
-    no-op fold already recorded at `pantry.md` line 22 — and 07-30's own content (it archived 07-22, itself a
-    verified no-op) is likewise already captured. Its standing carry-overs named the fold-worthy pattern — the three
-    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`
-    incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-07 opened no feature branch of
-    its own → verified no-op, nothing lost.
-  - **08-08 (folded 08-16) was another earned no-op — the pattern-hunt came up empty.** 08-08 was a
-    `## Nightly reflection` log (it archived 07-31). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (branch `nightly-2026-08-08`, 1 commit: bumped the idle streak to sixteen, corrected the stale
-    "errors.log frozen at 08-03" claim, recorded 07-31's verified no-op fold) — committed in the skills repo, and
-    that errors.log correction is already in the `hermes-local-gateway-ops` runbook. Its MEMORY half was the 07-31
-    verified no-op fold already recorded above (`pantry.md` line 23) — and 07-31's own twist (its own MEMORY half was
-    a real fold, 07-23's `feat/nightly-pull-routine`, already at `pantry.md` line 15) is likewise already captured.
-    Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #9/#10 review and the ANTHROPIC_API_KEY prereq —
-    but **all** are already in the Status board (nightly-pull-routine folded 07-31 at `pantry.md` line 111, the other
-    two 07-29 at lines 109–110; #9 merged / #10 open at lines 106–108 and the ANTHROPIC_API_KEY prereq in the 07-20
-    entries). 08-08 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-09 (folded 08-17) was another earned no-op — the pattern-hunt came up empty.** 08-09 was a
-    `## Nightly reflection` log (it archived 08-01). Diffed section-by-section: its SKILLS half was idle-day
-    runbook upkeep (branch `nightly-2026-08-09`, 1 commit: added 08-09 to the idle-days list as the 17th
-    consecutive night + noted the curator's ~weekly cadence so an unchanged run_count reads as expected),
-    committed in the skills repo. Its MEMORY half was the 08-01 verified no-op fold already recorded above
-    (provenance line 24). Its health note — a chained `||`/`;` command tripping the "multiple operations …
-    requires approval" gate, so a git op was re-run as a single `git -C` call — is already in the
-    `claude-worker-env` skill (and this runbook's Environment quick-refs). Its standing carry-overs named the
-    fold-worthy pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #9/#10 review and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board below
-    (nightly-pull-routine folded 07-31 at line 112, the other two 07-29 at lines 110–111; #9 merged / #10 open at
-    lines 107–109 and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-09 opened no feature branch of its
-    own → verified no-op, nothing lost.
-  - **08-10 (folded 08-18) was another earned no-op — the pattern-hunt came up empty.** 08-10 was a
-    `## Nightly reflection` log (it archived 08-02). Diffed section-by-section: 08-10 was **SKILLS-idle-but-real-finding**
-    — it was the night that **first captured the MCP-parking class** (`codegraph`+`basic-memory` `parking until a
-    reconnect is requested`), which is already codified in `hermes-local-gateway-ops` §"Behavior that is normal" and
-    has been refined every night since. Its MEMORY half was the 08-02 verified no-op fold already recorded above
-    (`pantry.md` line 25). Its health note — running each git op as a single `git -C` call to clear the
-    "multiple operations … requires approval" gate — is already in `claude-worker-env`. Its standing carry-overs named
-    the fold-worthy pattern — the three still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #10 review
-    (#9 merged) and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board (nightly-pull-routine
-    folded 07-31, the other two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries).
-    08-10 opened no feature branch of its own → verified no-op, nothing lost.
-  - **08-11 (folded 08-19) was another earned no-op — the pattern-hunt came up empty.** 08-11 was a
-    `## Nightly reflection` log (it archived 08-03). Diffed section-by-section: 08-11 was **SKILLS-idle-but-real-finding**
-    — it refined the MCP-parking class with the steady-state-dominant volume + the *first* in-session end-to-end
-    reconnect confirmation, both already codified in `hermes-local-gateway-ops` §"Behavior that is normal" (and further
-    refined every night since — tonight's 08-19 reframe supersedes it). Its MEMORY half was the 08-03 verified no-op
-    fold already recorded above (`pantry.md` line 26). Its standing carry-overs named the fold-worthy pattern — the three
-    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues`
-    incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #10 review (#9 merged) and the
-    ANTHROPIC_API_KEY prereq — but **all** are already in the Status board (nightly-pull-routine folded 07-31, the other
-    two 07-29; #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-11 opened no feature
-    branch of its own → verified no-op, nothing lost.
-  - **08-12 (folded 08-20) was another earned no-op — the pattern-hunt came up empty.** 08-12 was a
-    `## Nightly reflection` log (it archived 08-04). Diffed section-by-section: 08-12 was **SKILLS-idle-but-real-finding**
-    — it refined the MCP-parking class a *third* night dominant + the *second consecutive* in-session self-heal, both
-    codified in `hermes-local-gateway-ops` §"Behavior that is normal" and refined every night since (its "1,588 total
-    parks" cumulative framing was later superseded by the 08-14 rotation caveat → per-day rate, and the 08-19 reframe
-    to a periodic ~5-min self-probe cycle). Its MEMORY half was the 08-04 verified no-op fold already recorded above
-    (`pantry.md` line 27). Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #10 review (#9 merged) and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board below (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-12 opened no feature branch of its
-    own → verified no-op, nothing lost.
-  - **08-13 (folded 08-21) was another earned no-op — the pattern-hunt came up empty.** 08-13 was a
-    `## Nightly reflection` log (it archived 08-05). Diffed section-by-section: 08-13 was **SKILLS-idle-but-real-finding**
-    — it refined the MCP-parking class a *fourth* night dominant + the *third consecutive* in-session self-heal, both
-    codified in `hermes-local-gateway-ops` §"Behavior that is normal" and refined every night since (its "2,150 total
-    parks" cumulative framing was superseded by the 08-14 rotation caveat → per-day rate, then the 08-19 periodic
-    ~5-min self-probe reframe, and now the **08-21 finding that the whole parking cycle ENDED on 08-20 13:32** across
-    two gateway restarts). Its MEMORY half was the 08-05 verified no-op fold already recorded above (`pantry.md`
-    line 28). Its standing carry-overs named the fold-worthy pattern — the three still-open un-PR'd branches
-    (`feat/nightly-pull-routine`, `feat/receipt-parsing`, `chore/spec-audit-tracking-issues` incl.
-    `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus PR #10 review (#9 merged) and the ANTHROPIC_API_KEY
-    prereq — but **all** are already in the Status board below (nightly-pull-routine folded 07-31, the other two 07-29;
-    #9 merged / #10 open and the ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-13 opened no feature branch of its
-    own → verified no-op, nothing lost.
-  - **08-14 (folded 08-22) was another earned no-op — the pattern-hunt came up empty.** 08-14 was a
-    `## Nightly reflection` log (it archived 08-06). Diffed section-by-section: 08-14 was
-    **SKILLS-idle-but-real-finding** — its two genuine facts were the **`errors.log` rotation caveat**
-    (it rolled 08-13 11:35 → track the *per-day* park rate, not a cumulative total) and the *fourth
-    consecutive* in-session MCP self-heal, both codified in `hermes-local-gateway-ops` §"Behavior that is
-    normal" and refined every night since (the 08-19 periodic ~5-min self-probe reframe, the 08-21 finding
-    that the parking cycle ENDED 08-20 13:32, and tonight's 08-22 confirmation it stayed gone a second night
-    + the DNS-blip-on-reconnect refinement). Its MEMORY half was the 08-06 verified no-op fold already
-    recorded above (`pantry.md` line 29). Its standing carry-overs named the fold-worthy pattern — the three
-    still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues) plus
-    PR #10 review (#9 merged) and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board
-    below (nightly-pull-routine folded 07-31, the other two 07-29; #9 merged / #10 open and the
-    ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-14 opened no feature branch of its own → verified
-    no-op, nothing lost.
-  - (Folds for 08-15→08-18, done on the 08-23→08-26 nightlies, were all verified no-ops recorded in
-    `pantry.md` provenance lines + their commit messages, not re-narrated here — each was a `## Nightly
-    reflection` log whose durable content was already in `hermes-local-gateway-ops`; see `pantry.md` lines
-    38–41.)
+  - **07-24 through 08-18 folds (done on the 08-01 → 08-26 nightlies) were ALL verified no-ops — consolidated here from the former one-paragraph-per-night ledger (collapsed on the 2026-09-01 nightly per the ledger-consolidation convention; no distinct event dropped).** Every one of these archived logs was a `## Nightly reflection` whose durable content was already captured elsewhere: its infra facts (the entire MCP-parking arc — first-captured 08-10, the steady flat ~562/day period, the 08-14 `errors.log`-rotation caveat → per-day rate, the 08-19 periodic ~5-min self-probe reframe, and the 08-20 13:32 cycle-end) live in `hermes-local-gateway-ops` §"Behavior that is normal"; its worker-env/git facts (`simple_expansion` loops, `git -C`, the bare-glob approval gate, `update-index --chmod`, `merge-tree --write-tree`) in `claude-worker-env` / `github-workflow`; and each night's own MEMORY fold plus standing carry-overs (the three still-open un-PR'd branches `feat/nightly-pull-routine` / `feat/receipt-parsing` / `chore/spec-audit-tracking-issues`, PR #9 merged / #10 open, the ANTHROPIC_API_KEY prereq) were **all already in the `pantry.md` Status board** — its provenance lines (one per date) + each night's commit message hold the per-date detail. The fold-worthy-pattern hunt (walk each `##` section; treat any still-open un-PR'd branch as fold-worthy until found in the project file) ran every night and correctly came up empty: none of these logs opened a feature branch of its own. Nothing was lost on any of them. (The three genuine folds sit OUTSIDE this run and stay narrated in full: 07-21 and 07-23 above, 08-19 below.)
   - **08-19 (folded 08-27) BROKE the no-op streak — the THIRD "un-PR'd branch/PR slips through" real fold,
     same failure mode as 07-21 and 07-23.** 08-19's log has two `##` sections; its `## Nightly reflection`
     half was all already-captured (the 08-11 no-op fold at `pantry.md` line 34; the eleventh-night flat
@@ -508,45 +273,7 @@ task prompt, not the clock.
     run of no-op folds (08-10→08-18 here) does NOT mean the next one is. The 08-19 log's `gh`-spawn PR-create
     bridge fact (how PR #101 was opened) was already folded into `claude-worker-env` on the 08-20 nightly, so
     only the pantry deliverable itself was new. Provenance line added at `pantry.md`; nothing else lost.
-  - **08-20 (folded 08-28) went BACK to an earned no-op — the pattern-hunt ran and came up empty.** Unlike
-    the 08-19 log it archived-behind, 08-20's own log has two `##` sections but **no still-open PR/branch of
-    its own**: its SKILLS half *reported on* the 08-19 jetson session, but that session's deliverable (PR #101 /
-    `specs/jetson-orin-nano-setup.md`) was already folded into `pantry.md` on the 08-27 nightly (Status entry +
-    provenance line 42), and the `gh`-spawn PR-create bridge fact into `claude-worker-env` on the 08-20 nightly —
-    so 08-20 introduced **no new** project deliverable (it opened only the nightly skill branch). Its infra half
-    (MCP-parking flat an 11th night + the periodic-timer model confirmed end-to-end + the 08-15 DNS blip quiet a
-    4th night) is all in `hermes-local-gateway-ops` §"Behavior that is normal" and has been superseded nightly
-    since (08-21 cycle-ended → 08-28 WS-503). Its MEMORY half was the 08-12→archive verified no-op fold, already
-    at `pantry.md` line 35. Its standing carry-overs — PR #101 review, the un-PR'd `feat/nightly-pull-routine` +
-    `feat/receipt-parsing`, `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues, PR #10 (#9 merged),
-    ANTHROPIC_API_KEY — are **all** already in the Status board. So the "un-PR'd branch slips through" hunt (which
-    caught 07-21/07-23/08-19) came up empty here precisely because 08-20 is a *reflection-of* the jetson night,
-    not the jetson night itself. Verified no-op, provenance line added, nothing lost.
-  - **08-21 (folded 08-29) was another earned no-op — the pattern-hunt came up empty.** 08-21 was a
-    `## Nightly reflection` log (it archived 08-13, itself a verified no-op). Diffed section-by-section:
-    08-21 was **SKILLS-idle-but-real-finding** — its two genuine facts were **the eleven-night ~562/day
-    MCP-parking self-probe cycle ENDING on 08-20 13:32** (across the two 08-20 gateway restarts, pid 725
-    now holding the transports → "empty park stream = healthy") and **the `discord.com:443` adapter DNS
-    blip recurring on those restarts (not a one-off)** — both codified in `hermes-local-gateway-ops`
-    (§"Behavior that is normal" + §"Restart & exit-diagnostics triage") and superseded every night since
-    (the 08-27 WS-503, the 08-28 errors.log-silence-broke note, and tonight's 08-29 "parking gone a ninth
-    night, WS-503 did not recur"). Its MEMORY half was the 08-13 → archive verified no-op fold already
-    recorded above (`pantry.md` line 36). Its standing carry-overs named the fold-worthy pattern — **PR #101**
-    (jetson) review plus the still-open un-PR'd branches (`feat/nightly-pull-routine`, `feat/receipt-parsing`,
-    `chore/spec-audit-tracking-issues` incl. `create-tracking-issues.sh`/the 18 `[spec 2..19]` issues), PR #10
-    review (#9 merged) and the ANTHROPIC_API_KEY prereq — but **all** are already in the Status board (PR #101
-    folded 08-27 at line 42/123, nightly-pull-routine 07-31, the other two 07-29; #9 merged / #10 open and the
-    ANTHROPIC_API_KEY prereq in the 07-20 entries). 08-21 opened no feature branch of its own (only the nightly
-    skill branch `nightly-2026-08-21`) → verified no-op, nothing lost. (Note: unlike the 08-19 log, 08-21 is a
-    *reflection-of* the 08-20 cycle-end infra event, not a project deliverable — so the "un-PR'd branch slips
-    through" hunt that caught 07-21/07-23/08-19 correctly came up empty here.)
-  - (Folds for **08-22** (done on the 08-30 nightly) and **08-23** (done tonight, 08-31) were both
-    verified no-ops — each a `## Nightly reflection` log whose durable content was already in
-    `hermes-local-gateway-ops` (the ending/absence of MCP-parking, the DNS/WS-503 Discord signatures)
-    and whose standing carry-overs (PR #101, the un-PR'd branches, PR #10, ANTHROPIC_API_KEY) were all
-    already in `pantry.md` Status. Not re-narrated at length here — provenance lines + commit messages
-    hold the detail; see `pantry.md` lines 45–46. Kept brief deliberately, per the ledger-consolidation
-    convention.)
+  - **08-20 through 08-23 folds (done on the 08-28 → 08-31 nightlies) were ALL verified no-ops — same consolidation (collapsed 2026-09-01).** Each was a `## Nightly reflection` log with no still-open PR/branch of its own (08-20 only *reported on* the 08-19 jetson session, whose PR #101 deliverable was already folded on 08-27). Their durable infra facts (parking gone the 2nd→5th night → "empty park stream = healthy"; the 08-21 `discord.com:443` DNS blip generalized to "transient on ANY (re)connect"; the 08-22 curator first-ever `auto: 2 marked stale`) are all in `hermes-local-gateway-ops` §"Behavior that is normal" / §"Restart & exit-diagnostics triage" / §"Curator" and were superseded nightly since; their MEMORY halves + carry-overs (PR #101, the three un-PR'd branches, PR #10, ANTHROPIC_API_KEY) were all already in `pantry.md` Status. Provenance lines + commit messages hold the per-date detail — nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
