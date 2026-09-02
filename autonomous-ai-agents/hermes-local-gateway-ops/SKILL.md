@@ -530,13 +530,13 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
-  **ROLLING 2026-08-21 → 2026-09-01 — the empty-park-stream era is holding (consolidated from the
+  **ROLLING 2026-08-21 → 2026-09-02 — the empty-park-stream era is holding (consolidated from the
   per-night CONFIRMED ledger, 08-22…08-29, which had grown to one near-identical paragraph per night;
   collapsed on the 2026-08-30 nightly — no durable fact dropped, every distinct event is in the two
-  sections cross-referenced below).** Parking has stayed gone **twelve consecutive nights (08-21 through
-  09-01, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
+  sections cross-referenced below).** Parking has stayed gone **thirteen consecutive nights (08-21 through
+  09-02, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
   MCP self-probe→park→revive loop stays **dormant by design** — the current gateway (**pid 725**, up
-  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~11.9 days) keeps
+  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~13 days) keeps
   the codegraph/basic-memory transports connected, so the ~5-min timer never fires. **So "empty park
   stream = healthy" is the steady state** — verify via a live tool call (`mcp__codegraph__*` /
   `mcp__basic-memory__*` surface each session; the call itself is worker-sandbox permission-gated) or
@@ -547,14 +547,14 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   which appeared **08-27 05:20:16** and then **RECURRED 08-30 10:08:14** — so it is a *recurring
   transient*, not a one-off, and errors.log's long silence is now definitively over (its last write is
   the 08-30 10:08 WS-503 + the normal headless-worker `tools.registry … unavailable this turn` cascade
-  that shares its timestamp) — and it has had **no new write in the ~47 h since**, i.e. through the 09-01
+  that shares its timestamp) — and it has had **no new write in the ~65 h since**, i.e. through the 09-02
   nightly the WS-503 did NOT fire a third time (`WSServerHandshakeError` count holds at 2), so errors.log
   is once more quiet. agent.log `discord.gateway: … successfully RESUMED session` keepalives run
-  right through **09-01 02:00:35**. (The per-night "silent for N h / mtime
+  right through **09-02 01:54:24**. (The per-night "silent for N h / mtime
   frozen" shortcut earlier nightlies used is **retired** — errors.log now carries those two self-heal
   writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Still-open watch
-  (unchanged all twelve nights):** does parking *return* after the next restart? No `gateway.start` since
-  pid 725 came up 08-20 14:25 (~11.9 d), and none of the 08-21 DNS blip / 08-27 / 08-30 WS-503s was a
+  (unchanged all thirteen nights):** does parking *return* after the next restart? No `gateway.start` since
+  pid 725 came up 08-20 14:25 (~13 d), and none of the 08-21 DNS blip / 08-27 / 08-30 WS-503s was a
   restart (all were in-place reconnects / shard resumes that did not re-test the MCP transports), so a
   genuinely-silent stream still can't be distinguished from a would-be-silent-anyway one until a real
   restart re-tests them. Curator is no longer the imminent axis — it fired 08-28 18:44 (`run_count`
