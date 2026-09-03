@@ -39,7 +39,7 @@ task prompt, not the clock.
 - **Idle days are the steady state here, not a fault.** "SKILLS-idle" = no NEW
   delegated worker session since the last nightly (worker-runner.log has only
   lock-exit / "no .task files" noise past the last real `done`). This held every
-  night **07-24→08-19** (a 27-night streak) and again **08-21→09-02**; the last
+  night **07-24→08-19** (a 27-night streak) and again **08-21→09-03**; the last
   real worker session is still `jetson-orin-setup-plan` on 08-19 11:06. A long
   idle streak is the expected steady state — keep making ONE honest runbook
   refinement rather than inventing edits.
@@ -92,16 +92,20 @@ task prompt, not the clock.
   localhost` are both rejected — so idle-health rests on the worker-session +
   log-class + `mcp__*`-tools-surfaced evidence, which doesn't need them; earlier
   idle nights read ~74% free / ollama 200s.)
-- **09-02 (tonight):** SKILLS-idle on the worker axis, quiet-healthy infra, and
-  spent the LAST standing consolidation candidate (this block). MCP-parking gone
-  a **13th night** (08-21→09-02 all 0 new parks; live errors.log park count still
-  **1179**; last park still 08-20 13:32:11); `errors.log` **silent ~65 h** (mtime
-  frozen 08-30 10:08:15, last write still the 08-30 WS-503 + `tools.registry`
-  cascade — `WSServerHandshakeError` count still **2**, did not fire a third
-  time); gateway **pid 725 up ~13 d** no restart (`gateway.start` held at **30**);
-  `mcp__codegraph__*`/`mcp__basic-memory__*` tools surfaced + agent.log `RESUMED
-  session` keepalives through **09-02 01:54** verify it live; curator unchanged
-  (`run_count=6`, fired 08-28, next ~09-04).
+- **09-03 (tonight):** SKILLS-idle on the worker axis, quiet-healthy infra —
+  the standing consolidation candidates are all spent (09-02 spent the last one),
+  so tonight is a clean 2-commit idle roll (parking paragraph → 14th night +
+  this record + extend the Task-2 fold ledger to 08-26), NOT a no-op. MCP-parking
+  gone a **14th night** (08-21→09-03 all 0 new parks; live errors.log park count
+  still **1179**; last park still 08-20 13:32:11); `errors.log` **silent ~89 h**
+  (mtime still frozen 08-30 10:08:15, last write still the 08-30 WS-503 +
+  `tools.registry` cascade — `WSServerHandshakeError` count still **2**, did not
+  fire a third time); gateway **pid 725 up ~14 d** no restart (`gateway.start`
+  held at **30**); `mcp__codegraph__*`/`mcp__basic-memory__*` tools surfaced +
+  agent.log `RESUMED session` keepalives through **09-03 01:59:54** verify it
+  live; curator unchanged (`run_count=6`, fired 08-28, `.curator_state` mtime
+  still 08-28 14:44) — **next run due ~09-04, now the nearest changeable axis
+  (~1 day out)**; watch for it on the 09-04/09-05 nightly.
   On an idle day
   **do NOT fabricate skill edits.** Either capture one genuine finding from the
   nightly session itself — it runs *through* `claude-worker`, so its own tool
@@ -172,7 +176,7 @@ task prompt, not the clock.
     run of no-op folds (08-10→08-18 here) does NOT mean the next one is. The 08-19 log's `gh`-spawn PR-create
     bridge fact (how PR #101 was opened) was already folded into `claude-worker-env` on the 08-20 nightly, so
     only the pantry deliverable itself was new. Provenance line added at `pantry.md`; nothing else lost.
-  - **08-20 through 08-23 folds (done on the 08-28 → 08-31 nightlies) were ALL verified no-ops — same consolidation (collapsed 2026-09-01).** Each was a `## Nightly reflection` log with no still-open PR/branch of its own (08-20 only *reported on* the 08-19 jetson session, whose PR #101 deliverable was already folded on 08-27). Their durable infra facts (parking gone the 2nd→5th night → "empty park stream = healthy"; the 08-21 `discord.com:443` DNS blip generalized to "transient on ANY (re)connect"; the 08-22 curator first-ever `auto: 2 marked stale`) are all in `hermes-local-gateway-ops` §"Behavior that is normal" / §"Restart & exit-diagnostics triage" / §"Curator" and were superseded nightly since; their MEMORY halves + carry-overs (PR #101, the three un-PR'd branches, PR #10, ANTHROPIC_API_KEY) were all already in `pantry.md` Status. Provenance lines + commit messages hold the per-date detail — nothing lost.
+  - **08-20 through 08-26 folds (done on the 08-28 → 09-03 nightlies) were ALL verified no-ops — same consolidation (08-20→08-23 collapsed 2026-09-01; 08-24/08-25/08-26 rolled into this range on the 09-01/09-02/09-03 nightlies, each with its own full `pantry.md` provenance line).** Each was a `## Nightly reflection` log with no still-open PR/branch of its own (08-20 only *reported on* the 08-19 jetson session, whose PR #101 deliverable was already folded on 08-27). Their durable infra facts (parking gone the 2nd→6th night → "empty park stream = healthy"; the 08-21 `discord.com:443` DNS blip generalized to "transient on ANY (re)connect"; the 08-22 curator first-ever `auto: 2 marked stale`) are all in `hermes-local-gateway-ops` §"Behavior that is normal" / §"Restart & exit-diagnostics triage" / §"Curator" and were superseded nightly since; their MEMORY halves + carry-overs (PR #101, the three un-PR'd branches, PR #10, ANTHROPIC_API_KEY) were all already in `pantry.md` Status. Provenance lines (`pantry.md` lines 43–49) + commit messages hold the per-date detail — nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
