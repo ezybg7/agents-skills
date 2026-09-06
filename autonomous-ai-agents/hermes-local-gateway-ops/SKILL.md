@@ -298,6 +298,19 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
     nightly's file-reads (its `last_used` is stuck at 08-19), so if it ever appears in
     the stale set, `hermes curator pin hermes-local-gateway-ops` (CLI likely
     worker-gated → flag for Everett) before it can reach `archive_after_days`.
+- **NEW 2026-09-06 — the projected ~09-04 7th run FIRED, and REVERTED to `auto: no
+  changes`.** `.curator_state`: `run_count` 6→7, `last_run_at`
+  **2026-09-04T19:18:28 UTC** (15:18 local), 5.62s, `auto: no changes; llm: skipped
+  (consolidation off)`, artifacts at `~/.hermes/logs/curator/20260904-191828/`.
+  So the cadence holds a **7th** consecutive ~weekly point (08-28 → 09-04 = 7 days,
+  same early-afternoon slot), and the 08-28 `auto: 70 marked stale` batch was a
+  **one-time** transition of the 07-24 seed cohort, not an ongoing drip — nothing
+  new crossed the line this sweep, confirming the "70 was a same-age batch, not a
+  mechanism change" read. Maintained skills still safe (`nightly-maintenance` /
+  `claude-worker-env` still absent from the sidecar; `hermes-local-gateway-ops`
+  still `active`, `pinned:false`). **Next run ~09-11.** (Observable only on this
+  09-06 nightly because the 09-04 run landed *after* the 09-04 03:00 nightly, which
+  then 429'd — see `nightly-maintenance`.)
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
@@ -530,14 +543,21 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
-  **ROLLING 2026-08-21 → 2026-09-03 — the empty-park-stream era is holding (consolidated from the
-  per-night CONFIRMED ledger, 08-22…08-29, which had grown to one near-identical paragraph per night;
-  collapsed on the 2026-08-30 nightly — no durable fact dropped, every distinct event is in the two
-  sections cross-referenced below).** Parking has stayed gone **fourteen consecutive nights (08-21 through
-  09-03, all 0 parks)**; the last park of any kind is still **08-20 13:32:11** (`basic-memory`), and the
-  MCP self-probe→park→revive loop stays **dormant by design** — the current gateway (**pid 725**, up
-  since 08-20 14:25 local / exit-diag `gateway.start` held at **30**, no new restart in ~14 days) keeps
-  the codegraph/basic-memory transports connected, so the ~5-min timer never fires. **So "empty park
+  **ROLLING 2026-08-21 → 2026-09-06 — the empty-park-stream era is holding, and it has now SURVIVED A
+  RESTART (consolidated from the per-night CONFIRMED ledger, 08-22…08-29, which had grown to one
+  near-identical paragraph per night; collapsed on the 2026-08-30 nightly — no durable fact dropped,
+  every distinct event is in the two sections cross-referenced below).** Parking has stayed gone through
+  the **09-06 check** — 0 new parks since 08-20; the live errors.log park count holds at **1179** and the
+  last park of any kind is still **08-20 13:32:11** (`basic-memory`). (The 09-04 and 09-05 nightlies both
+  429'd on the Claude session limit so those two nights went *unobserved* — see `nightly-maintenance` —
+  but tonight's live count confirms nothing parked across the gap.) And the
+  MCP self-probe→park→revive loop stays **dormant by design** — the gateway keeps the
+  codegraph/basic-memory transports connected, so the ~5-min timer never fires. **The gateway that held
+  this state through 08-20→09-03 (pid 725) has since been REPLACED: `gateway.start` went 30→32 with two
+  new starts — pid 573 @ 2026-09-03 21:13:22 UTC and pid 667 @ 2026-09-04 21:27:06 UTC — so the current
+  process is `pid 667`** (no `gateway.exit_nonzero` was logged for either, unlike the 07-20 SIGTERM
+  restarts; the boot-time errors.log write for pid 667 was only the standing SSH security-audit line at
+  09-04 17:27 local, no MCP parking after it). **So "empty park
   stream = healthy" is the steady state** — verify via a live tool call (`mcp__codegraph__*` /
   `mcp__basic-memory__*` surface each session; the call itself is worker-sandbox permission-gated) or
   `hermes mcp list`, **never by the old ~562/day WARNING volume**. Across this whole 11-night window the
@@ -545,21 +565,29 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   restart (full detail in §"Restart & exit-diagnostics triage"): the single **08-21 04:20:33** adapter
   `discord.com:443` `ClientConnectorDNSError` DNS blip, and the gateway `WSServerHandshakeError: 503`
   which appeared **08-27 05:20:16** and then **RECURRED 08-30 10:08:14** — so it is a *recurring
-  transient*, not a one-off, and errors.log's long silence is now definitively over (its last write is
-  the 08-30 10:08 WS-503 + the normal headless-worker `tools.registry … unavailable this turn` cascade
-  that shares its timestamp) — and it has had **no new write in the ~89 h since** (errors.log mtime still
-  frozen at 08-30 10:08:15), i.e. through the 09-03 nightly the WS-503 did NOT fire a third time
-  (`WSServerHandshakeError` count holds at 2), so errors.log is once more quiet. agent.log
+  transient*, not a one-off. The **`WSServerHandshakeError` count holds at 2** (it did NOT fire a third
+  time through 09-06). Since the 08-30 WS-503, errors.log took only two more writes, both benign: a single
+  **HTTP 503 on `agent.conversation_loop` at 09-04 12:46** (`API call failed after 3 retries` — a backend
+  503 that exhausted its retries on one turn; the "only worry if all 3 retries fail" caveat in §"Gemini
+  free-tier limits", one isolated occurrence), and the **pid-667 boot security-audit line at 09-04
+  17:27:07** (the standing SSH finding — errors.log mtime now sits there, no longer "frozen at 08-30").
+  No MCP parking followed the restart; errors.log has been quiet the ~1.5 days since. agent.log
   `discord.gateway: … successfully RESUMED session` keepalives run
-  right through **09-03 01:59:54**. (The per-night "silent for N h / mtime
+  right through **09-06 02:36:59** (under pid 667). (The per-night "silent for N h / mtime
   frozen" shortcut earlier nightlies used is **retired** — errors.log now carries those two self-heal
-  writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Still-open watch
-  (unchanged all fourteen nights):** does parking *return* after the next restart? No `gateway.start` since
-  pid 725 came up 08-20 14:25 (~14 d), and none of the 08-21 DNS blip / 08-27 / 08-30 WS-503s was a
-  restart (all were in-place reconnects / shard resumes that did not re-test the MCP transports), so a
-  genuinely-silent stream still can't be distinguished from a would-be-silent-anyway one until a real
-  restart re-tests them. Curator is no longer the imminent axis — it fired 08-28 18:44 (`run_count`
-  5→6, `auto: 70 marked stale`), next ~09-04 (see §"Curator").
+  writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Watch RESOLVED
+  2026-09-06 — parking did NOT return after a real restart.** The 14-night open question ("does parking
+  return after the next restart?") is answered: the gateway restarted **twice** (pid 573 @ 09-03 21:13
+  UTC, pid 667 @ 09-04 21:27 UTC) — the first `gateway.start`s since pid 725 came up 08-20 — and the live
+  errors.log still shows **0 new parks** (count frozen at 1179, last park 08-20 13:32:11). A restart
+  re-instantiates the MCP transports, so this is the real test the earlier in-place reconnects (08-21 DNS
+  blip, 08-27/08-30 WS-503 shard resumes) could NOT provide, and the transports came up connected: the
+  `mcp__codegraph__*` / `mcp__basic-memory__*` tools surfaced and were callable under pid 667 in this
+  session. **So the empty-park-stream healthy state is now confirmed to survive a restart, not just a
+  long single uptime** — the 08-09→08-20 flat-~562/day parking era looks tied to that specific earlier
+  gateway build/config, and has not recurred on the current one. (New standing watch, much lower
+  priority: whether it stays gone across *future* restarts.) Curator is not the imminent axis — it fired
+  09-04 19:18 (`run_count` 6→7, back to `auto: no changes`), next ~09-11 (see §"Curator").
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
