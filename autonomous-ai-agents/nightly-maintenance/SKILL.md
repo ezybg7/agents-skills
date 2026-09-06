@@ -27,7 +27,34 @@ task prompt, not the clock.
   merges; you NEVER merge and NEVER open a PR for these.
   - `git -C ~/agents/skills switch -c nightly-<date>` (the current HEAD is the
     latest nightly, so a plain branch-off is correct). Verify chaining with
-    `git -C ~/agents/skills merge-base --is-ancestor nightly-<yesterday> nightly-<date>`.
+    `git -C ~/agents/skills merge-base --is-ancestor <last-nightly-branch> nightly-<date>`.
+  - **Branch off the last SUCCESSFUL nightly, which is NOT always `<yesterday>`.**
+    A nightly can no-op entirely (see the 429 failure mode below), leaving no
+    `nightly-<that-date>` branch — so `<yesterday>` may not exist. Don't assume
+    the date; take the base from live HEAD (`git -C ~/agents/skills branch
+    --show-current`) and pass that to `merge-base --is-ancestor`. **2026-09-06
+    branched off `nightly-2026-09-03`** because the 09-04 and 09-05 nightlies both
+    died on the 429 (skipped two dates in the chain); the chain stays unbroken as
+    long as you branch off whatever HEAD actually is.
+- **KNOWN FAILURE MODE — the reflect job can 429 on the Claude session limit and
+  no-op the WHOLE night (first seen 09-04/09-05).** The 03:00 `reflect-<date>` job
+  runs through `claude-worker` on the same Claude account as the daytime
+  interactive/worker sessions, so a heavy day can exhaust the shared **session
+  limit** before 03:00. When it does, the job dies in **1 turn, 0 tokens** with
+  `is_error:true, api_error_status:429, result:"You've hit your session limit ·
+  resets <time>"` (a ~778-byte result JSON) — **no branch, no fold, no note.**
+  This is DISTINCT from the gateway's Gemini free-tier 429 (that's the relay
+  backend; this is the Claude Code account limit on the reflect job itself). It
+  hit **two nights running, 09-04 and 09-05**, during the pantry
+  production-readiness push (the 09-05 daily-log even records two mid-day "limit
+  reset" relaunches). Detect it: `~/agents/logs/reflection.log` shows `FAILED
+  (reflect-<date>)`, and `jq '.is_error,.api_error_status,.result'
+  ~/agents/logs/claude-reflect-<date>-*.json` confirms the 429. **Two consequences
+  the recovering nightly must handle:** (1) the branch chain skips the failed
+  date(s) — branch off live HEAD, not `<yesterday>` (rule above); (2) Task 2 has a
+  **backlog** — more than one daily-log will be past the 7-day line (see Task 2's
+  "catch-up" note). Nothing else to do about the failures themselves — they're a
+  clean no-op, not corruption.
 - **Mine only genuinely-fresh material.** Sources:
   - `jq -r '.result' ~/agents/logs/claude-reflect-<date>-*.json` — the recent
     daily reflections (these session-result JSONs hold the distilled text in
@@ -112,6 +139,20 @@ task prompt, not the clock.
   denials are valid worker-sandbox evidence for `claude-worker-env` — or make a
   minimal honest change. **1–2 commits is the healthy norm**; a big diff on an
   idle night is a smell.
+- **09-06 (tonight) was NOT idle — the first non-idle nightly since the 08-19
+  jetson session.** Two real findings, both cross-refed to their owning skill:
+  (a) the 09-04/09-05 **session-limit 429** double-failure (durable note above);
+  (b) the gateway **restarted** (`gateway.start` 30→32: pid 573 @ 09-03 21:13 UTC,
+  pid 667 @ 09-04 21:27 UTC, current **pid 667**) — the FIRST restart since pid 725
+  came up 08-20, which finally **answers the 14-night open watch: MCP-parking did
+  NOT return** (park count still 1179, last park still 08-20 13:32:11), so the
+  empty-park-stream healthy state survives a restart → recorded in
+  `hermes-local-gateway-ops`. Also the **curator's 7th run fired 09-04 19:18 UTC**
+  (`run_count` 6→7, reverted to `auto: no changes`) → same skill's §"Curator".
+  Worker axis otherwise quiet (last real worker `done` still 08-19; the pantry
+  PR storm on 09-04/09-05 ran from interactive/orchestrator + Agent sessions, not
+  the `reflect`/`claude-worker` queue, so it leaves no worker-runner.log `done`).
+  Two commits: this file + `hermes-local-gateway-ops`.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
@@ -122,10 +163,17 @@ task prompt, not the clock.
 ## Task 2 — MEMORY (archive one daily-log, fold durable facts)
 
 - **"older than 7 days" = STRICTLY more than 7 days before today.** A file dated
-  exactly `today − 7` **stays**. So each night **exactly one** daily-log crosses
-  the line: the one dated `today − 8`. On 07-26, `2026-07-18` (8 days) archives
-  and `2026-07-19` (7 days) stays. First-ever eligible date was 07-25 (which
-  archived 07-17); 07-22/23/24 were correctly no-ops.
+  exactly `today − 7` **stays**. So on a normal night **exactly one** daily-log
+  crosses the line: the one dated `today − 8`. On 07-26, `2026-07-18` (8 days)
+  archives and `2026-07-19` (7 days) stays. First-ever eligible date was 07-25
+  (which archived 07-17); 07-22/23/24 were correctly no-ops.
+  - **"Exactly one" is only true when the PREVIOUS nightlies all ran. Archive
+    EVERY log strictly older than 7 days, not just `today − 8`.** A failed nightly
+    (429, above) archives nothing, so its `today − 8` is still sitting there a day
+    later. **09-06 caught up THREE at once — 08-27, 08-28, 08-29** — because the
+    09-04 and 09-05 nightlies 429'd (09-03 had correctly archived through 08-26).
+    `2026-08-30` (exactly 7 days) correctly stayed. Compute the set by date, don't
+    assume a single file.
 - For that one file: **fold its durable, NOT-yet-captured facts** into the
   matching `~/agents/memory/projects/<name>.md` (pantry → `projects/pantry.md`),
   then move the original to `~/agents/memory/daily-log/archive/` (`mv`, or
@@ -134,10 +182,22 @@ task prompt, not the clock.
     foldings, and the skills — the Hermes model-swap saga lives in
     `hermes-local-gateway-ops`, the queue/duplicate-run facts in
     `delegate-to-claude`, and recent project status supersedes old capture
-    decisions. Fold only what is durable AND not already somewhere; add a one-line
-    provenance note to the project file ("<date> daily-log folded in during the
-    <today> nightly archival"); and **state in the reflection that nothing was
-    lost** (name where the rest already lives). Don't duplicate a skill's facts.
+    decisions. Fold only what is durable AND not already somewhere; and **state in
+    the reflection that nothing was lost** (name where the rest already lives).
+    Don't duplicate a skill's facts.
+  - **The per-date provenance-line ledger in `pantry.md` was RETIRED by the
+    2026-09-03 ground-truth reset.** `pantry.md` was rewritten that day (its old
+    Status board had frozen at 08-19 while ~400 commits landed from other
+    machines); the rewrite states plainly that "`daily-log/archive/` remains the
+    record of the folds" and moved the old fold-provenance ledger into vault git
+    history. So **do NOT add "<date> folded in during the <today> archival" lines
+    to the rewritten `pantry.md`** — the `git mv` into `archive/` (which the 03:00
+    backup commits) IS the provenance now. Only edit `pantry.md` when a fold
+    carries genuinely NEW durable content, and match its current section shape
+    (`## State <date>`), not the retired ledger format. Also: that reset created a
+    `## Retired carry-overs (… do NOT repeat)` section — the old standing
+    carry-overs (PR #101, the un-PR'd `feat/*` branches, PR #10, ANTHROPIC_API_KEY)
+    are RESOLVED; never resurrect them from an archived log into a reflection.
   - **But "usually nothing to fold" is not "never" — diff section-by-section, don't
     assume.** 07-17→07-20 were all no-add folds, but **07-21 (folded 07-29) broke the
     streak**: its receipt-parsing half was already in `pantry.md` Status, yet its
@@ -177,6 +237,20 @@ task prompt, not the clock.
     bridge fact (how PR #101 was opened) was already folded into `claude-worker-env` on the 08-20 nightly, so
     only the pantry deliverable itself was new. Provenance line added at `pantry.md`; nothing else lost.
   - **08-20 through 08-26 folds (done on the 08-28 → 09-03 nightlies) were ALL verified no-ops — same consolidation (08-20→08-23 collapsed 2026-09-01; 08-24/08-25/08-26 rolled into this range on the 09-01/09-02/09-03 nightlies, each with its own full `pantry.md` provenance line).** Each was a `## Nightly reflection` log with no still-open PR/branch of its own (08-20 only *reported on* the 08-19 jetson session, whose PR #101 deliverable was already folded on 08-27). Their durable infra facts (parking gone the 2nd→6th night → "empty park stream = healthy"; the 08-21 `discord.com:443` DNS blip generalized to "transient on ANY (re)connect"; the 08-22 curator first-ever `auto: 2 marked stale`) are all in `hermes-local-gateway-ops` §"Behavior that is normal" / §"Restart & exit-diagnostics triage" / §"Curator" and were superseded nightly since; their MEMORY halves + carry-overs (PR #101, the three un-PR'd branches, PR #10, ANTHROPIC_API_KEY) were all already in `pantry.md` Status. Provenance lines (`pantry.md` lines 43–49) + commit messages hold the per-date detail — nothing lost.
+  - **08-27 / 08-28 / 08-29 folds (all done on the 09-06 nightly as a 3-log
+    catch-up, since 09-04 & 09-05 429'd — see the failure-mode note) were ALL
+    verified no-ops.** Each is a pure `## Nightly reflection` log that opened no
+    branch/PR of its own; walked section-by-section, every durable fact already had
+    a home: 08-27's MCP-parking-7th-night + curator-imminent + the **08-19 jetson
+    PR #101 fold it performed** are in `hermes-local-gateway-ops` §"Curator"/
+    §"Behavior that is normal" and `pantry.md` (PR #101 now a *Retired* carry-over);
+    08-28's **WS-503 new-signature** finding is in §"Restart & exit-diagnostics
+    triage"; 08-29's **curator `auto: 70 marked stale`** (the 07-24 seed cohort) +
+    the `delegate-to-claude`-still-active anomaly are in §"Curator". Their pantry
+    carry-overs are all in `pantry.md`'s *Retired carry-overs* section (resolved by
+    the 09-03 reset — not resurrected). No provenance lines added (ledger retired,
+    above); `git mv`'d all three to `archive/`, left staged for the 03:00 backup.
+    Nothing lost.
   - Memory files use **basic-memory frontmatter** (`title` / `type` / `permalink`)
     — preserve it when editing or moving.
 - **Do NOT commit or push memory yourself.** The 03:00 `backup` routine commits
