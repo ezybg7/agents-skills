@@ -543,11 +543,11 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
-  **ROLLING 2026-08-21 → 2026-09-06 — the empty-park-stream era is holding, and it has now SURVIVED A
+  **ROLLING 2026-08-21 → 2026-09-07 — the empty-park-stream era is holding, and it has now SURVIVED A
   RESTART (consolidated from the per-night CONFIRMED ledger, 08-22…08-29, which had grown to one
   near-identical paragraph per night; collapsed on the 2026-08-30 nightly — no durable fact dropped,
   every distinct event is in the two sections cross-referenced below).** Parking has stayed gone through
-  the **09-06 check** — 0 new parks since 08-20; the live errors.log park count holds at **1179** and the
+  the **09-07 check** — 0 new parks since 08-20; the live errors.log park count holds at **1179** and the
   last park of any kind is still **08-20 13:32:11** (`basic-memory`). (The 09-04 and 09-05 nightlies both
   429'd on the Claude session limit so those two nights went *unobserved* — see `nightly-maintenance` —
   but tonight's live count confirms nothing parked across the gap.) And the
@@ -566,14 +566,14 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   `discord.com:443` `ClientConnectorDNSError` DNS blip, and the gateway `WSServerHandshakeError: 503`
   which appeared **08-27 05:20:16** and then **RECURRED 08-30 10:08:14** — so it is a *recurring
   transient*, not a one-off. The **`WSServerHandshakeError` count holds at 2** (it did NOT fire a third
-  time through 09-06). Since the 08-30 WS-503, errors.log took only two more writes, both benign: a single
+  time through 09-07). Since the 08-30 WS-503, errors.log took only two more writes, both benign: a single
   **HTTP 503 on `agent.conversation_loop` at 09-04 12:46** (`API call failed after 3 retries` — a backend
   503 that exhausted its retries on one turn; the "only worry if all 3 retries fail" caveat in §"Gemini
   free-tier limits", one isolated occurrence), and the **pid-667 boot security-audit line at 09-04
   17:27:07** (the standing SSH finding — errors.log mtime now sits there, no longer "frozen at 08-30").
-  No MCP parking followed the restart; errors.log has been quiet the ~1.5 days since. agent.log
+  No MCP parking followed the restart; errors.log has been quiet the ~2.4 days since. agent.log
   `discord.gateway: … successfully RESUMED session` keepalives run
-  right through **09-06 02:36:59** (under pid 667). (The per-night "silent for N h / mtime
+  right through **09-07 01:05:43** (under pid 667). (The per-night "silent for N h / mtime
   frozen" shortcut earlier nightlies used is **retired** — errors.log now carries those two self-heal
   writes, so read liveness from keepalives + a live tool call, not from file mtime.) **Watch RESOLVED
   2026-09-06 — parking did NOT return after a real restart.** The 14-night open question ("does parking
