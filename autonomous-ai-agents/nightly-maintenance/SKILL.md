@@ -55,6 +55,13 @@ task prompt, not the clock.
   **backlog** — more than one daily-log will be past the 7-day line (see Task 2's
   "catch-up" note). Nothing else to do about the failures themselves — they're a
   clean no-op, not corruption.
+  - **RECOVERED — the 429 did NOT recur on 09-06 or 09-07.** `reflection.log` shows
+    `done (reflect-2026-09-06)` and `reflect-2026-09-07` processing normally, so the
+    double-failure was the *shared Claude session limit exhausted by the 09-04/09-05
+    pantry production-readiness PR storm*, NOT a standing regression. Once the heavy
+    interactive days ended the 03:00 job had headroom again — the failure is real but
+    load-triggered (expect it only after a very heavy interactive day; the chain
+    self-heals the next quiet night, and branch-off-live-HEAD absorbs the gap).
 - **Mine only genuinely-fresh material.** Sources:
   - `jq -r '.result' ~/agents/logs/claude-reflect-<date>-*.json` — the recent
     daily reflections (these session-result JSONs hold the distilled text in
@@ -153,6 +160,23 @@ task prompt, not the clock.
   PR storm on 09-04/09-05 ran from interactive/orchestrator + Agent sessions, not
   the `reflect`/`claude-worker` queue, so it leaves no worker-runner.log `done`).
   Two commits: this file + `hermes-local-gateway-ops`.
+- **09-07 (tonight) — idle-but-real, back to the steady-state single-commit-pair
+  roll.** Reflect chain healthy again (09-06 `done`, 09-07 processing — 429 recovery
+  note above). Worker/queue axis still idle: last real worker `done` is STILL the
+  08-19 jetson session; worker-runner.log past it is only lock-exit / "no .task files"
+  noise + the 08-30 `resume-merge-authorization` FAILED. The day's real work was
+  **pantry PR #194** (the `db/asserts/0055` self-match defect fix + Neon Managed Auth
+  retirement, applied to production 09-07 00:44 EDT — see daily-log `2026-09-07.md`),
+  which ran through **interactive/Agent sessions, not the `reflect`/`claude-worker`
+  queue**, so it leaves NO worker-runner `done` (same pattern as the 09-04/05 PR
+  storm — a busy pantry day still reads as "SKILLS-idle" on the worker axis; that is
+  correct, not a miss). Its 0055/Neon lessons are pantry facts → they belong in
+  `pantry.md`/the daily-log, not a skill (the daily-log already holds them; they fold
+  when `2026-09-07.md` crosses the 7-day line ~09-15). Infra held: `gateway.start`
+  still **32** (pid 667, no new restart since 09-04 21:27 UTC), curator unchanged
+  (`run_count=7`, last run 09-04 19:18, next ~09-11), errors.log quiet since 09-04
+  17:27, keepalives through 09-07 01:05:43. Two commits: this file + the
+  `hermes-local-gateway-ops` date roll.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
