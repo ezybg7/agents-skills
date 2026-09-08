@@ -177,6 +177,24 @@ task prompt, not the clock.
   (`run_count=7`, last run 09-04 19:18, next ~09-11), errors.log quiet since 09-04
   17:27, keepalives through 09-07 01:05:43. Two commits: this file + the
   `hermes-local-gateway-ops` date roll.
+- **09-08 (tonight) — idle-but-real again; steady-state single-commit-pair roll,
+  the third straight clean reflect night.** Reflect chain fully healthy: `reflection.log`
+  shows `done (reflect-2026-09-06)`, `done (reflect-2026-09-07)`, and `reflect-2026-09-08`
+  processing normally, so the 09-04/09-05 session-limit **429 has now stayed away three
+  nights running** (09-06/07/08) — the load-triggered read holds; no regression. Worker/queue
+  axis still idle: last real worker `done` is STILL the 08-19 jetson session; worker-runner.log
+  past it is only lock-exit / "no .task files" noise (no new delegated session since 09-07).
+  Infra held **identical to 09-07, one day on** — nothing changed on any axis, so tonight's
+  gateway-ops edit is an honest *confirmation* roll, not a new event: gateway **pid 667** still
+  up (connected 09-04 17:27:12 EDT = 21:27 UTC; NO new `Shard ID None has connected to
+  Gateway`/IDENTIFY since, only same-session RESUMEDs — `gateway.start` still **32**, ~3.4 d
+  uptime), session `9870970…` RESUMED right through **09-08 02:31:57**; `errors.log` still
+  frozen at **09-04 17:27:07** (park count frozen **1179**, last park still 08-20 13:32:11
+  basic-memory; `WSServerHandshakeError` count still **2**, did not fire a third time through
+  09-08); curator unchanged (`run_count=7`, last run 09-04 19:18 UTC, next ~09-11). Verified
+  live via surfaced `mcp__codegraph__*` / `mcp__basic-memory__*` tools + the keepalives. Two
+  commits: this file + the `hermes-local-gateway-ops` date roll (09-07 → 09-08). MEMORY:
+  clean single-file archive (2026-08-31, today−8), verified no-op fold — see Task 2.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
