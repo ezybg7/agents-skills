@@ -195,6 +195,30 @@ task prompt, not the clock.
   live via surfaced `mcp__codegraph__*` / `mcp__basic-memory__*` tools + the keepalives. Two
   commits: this file + the `hermes-local-gateway-ops` date roll (09-07 → 09-08). MEMORY:
   clean single-file archive (2026-08-31, today−8), verified no-op fold — see Task 2.
+- **09-09 (tonight) — NOT idle: the richest night since 09-06, with THREE distinct
+  findings + this record (4 commits).** The reflect chain is fully healthy — `reflection.log`
+  shows `done` for 09-06/07/08 and `reflect-2026-09-09` processing, so the session-limit
+  **429 has now stayed away a 4th straight night**; no regression. The day's genuinely-fresh
+  material (all of it post-dates the 09-08 03:00 nightly, so none was visible to it):
+  - **The worker/queue axis is NO LONGER idle** — the 08-19-jetson-since streak is over. A
+    NEW automated **`ci-triage`** job class ran through `claude-worker` on 09-08 (four real
+    triages + two self-skips, 15:31–16:09 UTC; `worker-runner.log` + `~/agents/logs/ci-triage.log`):
+    verdicts `infra` (issue #210, Actions billing) vs `code` (PR #211, a `formatTime(60)`
+    off-by-one), a Step-2 dedupe guard, a `skipped-self` guard, and a self-hosted-runner
+    sparse-checkout caveat. → documented in `delegate-to-claude` (new §).
+  - **A worker-sandbox change: bare `gh` now passes the allowlist** — a `~/.local/bin/gh`
+    copy exists (created 09-08 11:40, same mechanism as the node copy), so the python3
+    spawn is no longer required; only absolute-path gh is still blocked (proven by ci-triage
+    run 34248247382). → `claude-worker-env` §"gh / GitHub from the worker".
+  - **Gateway restarted 09-08 20:39 and BRIEFLY re-triggered MCP-parking** (start-lines
+    32→33; 14 new parks 20:54–21:24, park count 1179→1193, then dormant within ~36 min,
+    transports settled connected). This refines the 09-06 "parking did not return after a
+    restart" conclusion — it can return transiently and self-settle. → `hermes-local-gateway-ops`.
+  These were verified live (log timestamps + the surfaced `mcp__*` tools + `~/.local/bin/gh`
+  on disk), not inferred. A 4-commit night is justified here precisely because the material is
+  real and multi-axis — the "big diff on an idle night is a smell" rule does NOT apply to a
+  genuinely non-idle night. MEMORY: clean single-file archive (**2026-09-01**, today−8),
+  verified no-op fold — see Task 2.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
