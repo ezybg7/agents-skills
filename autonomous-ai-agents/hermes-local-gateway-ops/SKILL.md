@@ -543,7 +543,7 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   also means the "in-session self-heal reproduced N nights running" streak has a clean terminus:
   tonight there was nothing to self-heal because nothing parked. Watch whether parking stays gone
   across the next restart, or whether it returns to the timer-driven flat rate.)
-  **ROLLING 2026-08-21 → 2026-09-08 — the empty-park-stream era is holding, and it has now SURVIVED A
+  **ROLLING 2026-08-21 → 2026-09-09 — the empty-park-stream era is holding, and it has now SURVIVED A
   RESTART (consolidated from the per-night CONFIRMED ledger, 08-22…08-29, which had grown to one
   near-identical paragraph per night; collapsed on the 2026-08-30 nightly — no durable fact dropped,
   every distinct event is in the two sections cross-referenced below).** Parking has stayed gone through
@@ -589,6 +589,26 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   gateway build/config, and has not recurred on the current one. (New standing watch, much lower
   priority: whether it stays gone across *future* restarts.) Curator is not the imminent axis — it fired
   09-04 19:18 (`run_count` 6→7, back to `auto: no changes`), next ~09-11 (see §"Curator").
+  **NEW 2026-09-09 — the "survives a restart" watch is NOT fully closed: the 09-08 20:39 restart
+  BRIEFLY brought MCP-parking BACK before it self-settled.** The gateway restarted again at
+  **09-08 20:39:10** (a new `Starting Hermes Gateway` → total start-lines in gateway.log now **33**, up
+  from 32; `✓ discord connected` 20:39:13) — the first restart since pid 667 came up 09-04 21:27 UTC.
+  Unlike the 09-03 and 09-04 restarts, which came up with the MCP transports connected (0 parks), **this
+  one re-entered the ~5-min self-probe park cycle**: codegraph+basic-memory parked in pairs at 20:54,
+  20:59, 21:04, 21:09, 21:14, 21:19, 21:24 (preceded by a `basic-memory keepalive failed, triggering
+  reconnect` at 20:54:06), so the live errors.log park count rose **1179 → 1193** (+14 = 7 cycles × 2
+  servers) — the first new parks since 08-20 13:32:11. The `attempting revival` INFO lines landed in
+  agent.log as expected (last two 21:29:54 / 21:30:01), preserving the park==revival pairing. Then it
+  **went dormant again**: errors.log's last write is 21:24:57 and agent.log's last revival is 21:30:01,
+  i.e. the loop ran only ~20:54→21:30 (~36 min) then stopped, and the transports settled connected — the
+  `mcp__codegraph__*` / `mcp__basic-memory__*` tools surfaced and were callable in this 09-09 reflect
+  session, ~5 h later, with no further parks. **So refine the 09-06 "parking did NOT return after a
+  restart" conclusion: a restart can re-trigger a brief (~30–45 min) park window that self-settles back
+  to the empty-park state — it is NOT guaranteed park-free, but it is also NOT a return of the flat
+  ~562/day era** (14 parks total, not hundreds/day). Read post-restart parking as an expected transient
+  that must *settle within ~an hour*; only worry if the ~5-min cycle is still logging parks well beyond
+  that or a live tool call fails. The `WSServerHandshakeError` count still holds at **2** (no third
+  firing through 09-08), and curator is unchanged (`run_count=7`, last 09-04 19:18, next ~09-11).
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
