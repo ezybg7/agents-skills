@@ -90,3 +90,42 @@ Multi-file code changes, deep research, tasks failed twice locally.
 6. If your own reply/narration dies mid-turn (e.g. a rate limit), the
    functional work usually completed first — reconstruct status from the
    queue dirs and result JSONs, never from the truncated chat reply.
+
+## Automated `ci-triage` job class (new 2026-09-08)
+
+A second, **automated** job class now runs through the SAME `claude-worker`
+queue alongside user-delegated `<slug>.task` files and the nightly
+`reflect-<date>` jobs. It is triggered **per failed GitHub Actions run** on the
+pantry repo (`ezybg7/pantry`) and appears in `worker-runner.log` as
+`claude-worker: processing ci-triage-<run_id>` → its result JSON is
+`claude-ci-triage-<run_id>-*.json`. First seen **09-08** (four real triages plus
+two self-skips between 15:31–16:09 UTC); it is why the worker/queue axis is no
+longer "idle since the 08-19 jetson session." You don't hand-write these — they
+self-enqueue — but know the shape when reading the logs or the nightly:
+
+- **Outcome ledger: `~/agents/logs/ci-triage.log`** — one TSV row per event:
+  `ts  run_id  workflow  branch  status  outcome`. `status` ∈ `queued` /
+  `outcome` / `skipped-self`.
+- **Verdict taxonomy — `infra` vs `code`.** `infra` = an environment/runner/
+  billing problem, not the code (files a tracking issue or comments on the PR,
+  **no fix PR**). `code` = a real defect (opens a fix PR on a
+  `fix/ci-<run_id>-<slug>` branch). 09-08 examples: `infra` — GitHub Actions
+  billing blocked the ubuntu-latest bundle job → filed **issue #210**; `code` —
+  a `formatTime(60)` off-by-one (`<=60` → `<60`) → opened **PR #211**.
+- **Two guardrails, both proven live 09-08 (don't "fix" them as bugs):**
+  - **`skipped-self`** — triage never triages its OWN `fix/ci-*` or secret-scan
+    branches ("triage never triages its own fix branches"), so its fixes don't
+    recursively re-trigger it.
+  - **Step-2 dedupe guard** — it will NOT open a second PR for the same
+    defect/sha; it comments on the existing PR instead (run `34248247382` was a
+    duplicate of PR #211's fix on the same scratch sha → no 2nd PR, commented on
+    #211).
+- **Shared-workspace caveat (infra class, 09-08).** These jobs run on the
+  self-hosted m4-mini runner sharing ONE checkout, and a ci-triage job can leave
+  that workspace in **sparse-checkout (`.github` only)**, which then breaks a
+  sibling job's `setup-node`/`.nvmrc` lookup (run `34245553832`, `infra` verdict,
+  commented on #209). The repo itself is fine — it's leftover shared-workspace
+  state, not a code fault; don't chase it as a repo bug.
+- gh calls from these sessions use the **bare `gh`** form now that
+  `~/.local/bin/gh` exists — absolute-path gh is still blocked (see
+  `claude-worker-env` §"gh / GitHub from the worker").
