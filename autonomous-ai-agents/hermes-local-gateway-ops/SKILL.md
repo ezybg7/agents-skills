@@ -609,6 +609,23 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   that must *settle within ~an hour*; only worry if the ~5-min cycle is still logging parks well beyond
   that or a live tool call fails. The `WSServerHandshakeError` count still holds at **2** (no third
   firing through 09-08), and curator is unchanged (`run_count=7`, last 09-04 19:18, next ~09-11).
+  **NEW 2026-09-10 — the 09-08 post-restart park window has SETTLED and stayed empty ~1.5 days,
+  substantially closing the 09-09 "watch not fully closed" concern.** No new gateway restart since the
+  09-08 20:39 one: `gateway.start` still **33** (gateway.log start-lines and exit-diag agree), and
+  exit-diag now pins that restart as **pid 667 → pid 1483** (pid 667 `gateway.exit_nonzero`
+  2026-09-09T00:33:06 UTC, pid 1483 `gateway.start` 00:38:51 UTC = 09-08 20:38:51 local — the SAME event
+  the 09-09 note saw but left un-pid'd, so the current process is **pid 1483**, up ~1.5 d). The brief
+  post-restart park window (14 parks 20:54–21:24, revival INFO through 21:30) has **not resumed**: the
+  live errors.log park count holds at **1193** (unchanged since 09-09), the last park of any kind is
+  still **09-08 21:24:57** (`basic-memory`), errors.log mtime is frozen there, and the
+  `WSServerHandshakeError` count still holds at **2** (no third firing). So the 09-09 refinement
+  resolves cleanly: a restart can re-trigger a ~30–45 min park window that self-settles, and once
+  settled it STAYS settled across the following days — the flat ~562/day era has NOT returned (14 parks
+  total, then dormant ~1.5 d). Verified live: the `mcp__codegraph__*` / `mcp__basic-memory__*` tools
+  surfaced this session + agent.log `discord.gateway: … successfully RESUMED session` keepalives on the
+  new post-restart session `fe11ad22…` run through **09-10 02:25:14**. Curator unchanged (`run_count=7`,
+  last 09-04 19:18 UTC, next **~09-11** — now the nearest changeable axis, ~1 day out; watch it on the
+  09-11 nightly).
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
