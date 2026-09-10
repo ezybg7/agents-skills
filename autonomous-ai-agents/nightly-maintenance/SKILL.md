@@ -219,6 +219,25 @@ task prompt, not the clock.
   real and multi-axis — the "big diff on an idle night is a smell" rule does NOT apply to a
   genuinely non-idle night. MEMORY: clean single-file archive (**2026-09-01**, today−8),
   verified no-op fold — see Task 2.
+- **09-10 (tonight) — idle-but-real; steady-state roll PLUS a real new artifact brought under version
+  control.** The reflect chain is fully healthy — `reflection.log` shows `done` for 09-06/07/08/09 and
+  `reflect-2026-09-10` processing, so the session-limit **429 has now stayed away a 5th straight
+  night**; no regression. Worker/queue axis idle again: the 09-08 `ci-triage` batch (four `done`, last
+  `ci-triage-34248247382` @ 09-08 12:02) is still the last real worker session — nothing new on 09-09 or
+  09-10 (worker-runner.log past it is only lock-exit / "no .task files" noise). The one genuinely-new
+  item tonight: the **`apple-hig` skill** — a complete, verified skill built **09-09 22:27** (*after* the
+  09-09 03:00 nightly, so unseen by it; 408K, `SKILL.md` + 17 `references/` + a `tools/` regenerator, no
+  corpus bloat) — was sitting **untracked** in the repo, so I brought it under version control on this
+  branch as its own commit (the repo exists to version agent skills, and the nightly branch is never
+  auto-merged, so it stays fully reviewable — flagged in the reflection for Everett). Infra held one day
+  on from 09-09: no new restart (`gateway.start` still **33**, current **pid 1483** up ~1.5 d), the 09-08
+  post-restart brief park window **settled and stayed empty** (park count frozen **1193**, last park
+  still 09-08 21:24:57), WS-503 count still **2**, keepalives through 09-10 02:25 — an honest
+  *confirmation* roll of `hermes-local-gateway-ops` that substantially closes the 09-09 "watch not fully
+  closed" item. **Curator is now the imminent axis — next run ~09-11** (`run_count=7`, last 09-04 19:18);
+  watch for it on the 09-11 nightly. **Three commits** (justified — apple-hig is a real new artifact, not
+  a fabricated idle edit): apple-hig + this file + the `hermes-local-gateway-ops` date roll. MEMORY:
+  clean single-file no-op fold (**2026-09-02**, today−8) — see Task 2.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
