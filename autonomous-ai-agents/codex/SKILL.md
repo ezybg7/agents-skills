@@ -76,6 +76,29 @@ process(action="kill", session_id="<id>")
 | `--yolo` | No sandbox, no approvals (fastest, most dangerous) |
 | `--sandbox danger-full-access` | No Codex sandbox; useful when the host service context breaks bubblewrap |
 
+## An exec-policy is NOT a sandbox — it only blocks the forms you wrote (2026-09-11)
+
+If you run Codex under `--yolo` (no OS sandbox) and try to contain it with a
+`codex execpolicy` ruleset (`--rules <file>`, literal-argv allow/deny), **that
+ruleset is trivially bypassable** and does not contain remote-write. Evidence
+(`~/agents/logs/codex-review-2026-09-11T002928.last.txt`, conf 1.0, on the mini's
+`.codex/rules/pantry.rules`): literal `git push` returns `forbidden`, but
+`git -C . push`, `/usr/bin/git push`, and `npx wrangler deploy` all return
+`{"matchedRules":[]}`. The rules match only literal argv prefixes, so an absolute
+path, a global-option form, a package runner (`npx`/`pnpm dlx`), or a shell
+wrapper (`sh -c`) regains the authority you thought you denied.
+
+Two rules follow:
+- **Real containment is the OS sandbox** (Seatbelt/bubblewrap deny-network +
+  deny-write-outside-worktree), not the exec-policy. Use `--full-auto` /
+  `workspace-write` (or a credential-free OS account) for anything untrusted;
+  treat `--yolo`+execpolicy as unsandboxed.
+- **A passing probe proves only the exact forms you ran.** A gate that reports
+  "14/14 passed" after testing one literal `git push` is narrower than it sounds
+  — add negative tests for `git -C`, absolute paths, `npx`, and wrapper forms
+  before claiming a profile is safe. Only running the real command under the real
+  sandbox tells you what is actually denied.
+
 ## Hermes Gateway Caveat
 
 When invoking the Codex CLI from a Hermes gateway/service context (for example,
