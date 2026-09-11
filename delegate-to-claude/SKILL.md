@@ -129,3 +129,21 @@ self-enqueue — but know the shape when reading the logs or the nightly:
 - gh calls from these sessions use the **bare `gh`** form now that
   `~/.local/bin/gh` exists — absolute-path gh is still blocked (see
   `claude-worker-env` §"gh / GitHub from the worker").
+- **CRITICAL, found 2026-09-11: the triage prompt ran untrusted branch code under
+  operator credentials (RCE) — trigger now disabled on `main`.** The prompt's
+  reproduction step checked out a failing run's `head_sha` and ran `npm run
+  typecheck|lint|test`, all of which execute scripts from **that branch's**
+  `package.json`/configs — inside `claude-worker`, which exports
+  `CLAUDE_CODE_OAUTH_TOKEN` and can read `~/agents/.env.acceptance` (production DB)
+  and `~/.config/gh/hosts.yml`. Anyone who can make CI fail on a PR branch got
+  code execution with the operator's credentials and network. Evidence:
+  `~/agents/logs/codex-review-2026-09-11T002928.last.txt`, critical conf 0.98.
+  **Acted on same session — trigger disabled on `main` (`if: false`, pantry commit
+  `1f51436`)**; spec/prompt stay reviewable. **Do NOT re-arm automated PR-branch
+  triage without a credential-free isolation boundary** (disposable VM/container or
+  a separate OS account with no saved creds and no outbound network); until then,
+  limit triage to trusted `main`-branch failures. A secondary finding: the fixed
+  `typecheck/lint/test` repro does not even reproduce four of the five watched
+  workflows (Secret scan / Disclosures / nightly bundle / branch-sync are not
+  tsc/jest jobs), so it could also report a real failure as "not reproduced" — pick
+  the repro command from the failing workflow when it is re-armed.
