@@ -311,6 +311,14 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   still `active`, `pinned:false`). **Next run ~09-11.** (Observable only on this
   09-06 nightly because the 09-04 run landed *after* the 09-04 03:00 nightly, which
   then 429'd — see `nightly-maintenance`.)
+- **2026-09-11 nightly (03:00): the projected ~09-11 run had NOT yet fired.**
+  `.curator_state` still `run_count=7`, last run 09-04 19:18 UTC; newest artifact
+  dir still `~/.hermes/logs/curator/20260904-191828/`. This is expected, not a
+  stall: every prior run fired in the **early-afternoon** slot (~15:18 local /
+  19:18 UTC), so at 03:00 the 7-day-cadence run (09-04 → ~09-11) is simply still
+  ahead. Watch continues into 09-11 afternoon — if it fires, expect `run_count`
+  7→8 and another `auto: no changes`; maintained skills stay safe (still absent
+  from the sidecar / `pinned:false`).
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
@@ -626,6 +634,15 @@ no guardrails, while the file looks fine at a glance. After ANY config edit:
   new post-restart session `fe11ad22…` run through **09-10 02:25:14**. Curator unchanged (`run_count=7`,
   last 09-04 19:18 UTC, next **~09-11** — now the nearest changeable axis, ~1 day out; watch it on the
   09-11 nightly).
+- **2026-09-11 (confirmation roll, one day on from 09-10 — nothing changed on the gateway axis).**
+  `~/.hermes/logs/errors.log` has **0 new entries since 09-08 21:24:57** (the `basic-memory` park) — mtime
+  still frozen there, park count still **1193**, `WSServerHandshakeError` count still **2** (no third
+  firing). `gateway.log` last activity **09-08 20:39:19** (housekeeping + kanban dispatcher singleton), so
+  **pid 1483 is still up, no new restart** since 09-08 20:38:51 (`gateway.start` holds). The 09-08
+  post-restart park window remains settled-and-empty — the 09-09 "a restart can re-trigger a brief park
+  window that self-settles and stays settled" refinement holds a day longer with no new data against it.
+  Only open gateway-adjacent watch is the curator (see §"Curator": the ~09-11 run had not yet fired at
+  03:00). An honest confirmation, not a new event.
 
 ## Stuck bot: the clarify-tool hang (2026-07-18 evening)
 
