@@ -238,6 +238,30 @@ task prompt, not the clock.
   watch for it on the 09-11 nightly. **Three commits** (justified — apple-hig is a real new artifact, not
   a fabricated idle edit): apple-hig + this file + the `hermes-local-gateway-ops` date roll. MEMORY:
   clean single-file no-op fold (**2026-09-02**, today−8) — see Task 2.
+- **09-11 (tonight) — NOT idle; 4 commits, the richest findings night since the 09-10 merge.** The
+  chain was **merged into `main` on 09-10** (Everett's explicit word — fast-forward, `main` =
+  `nightly-2026-09-10` = `3056dcf`), so tonight branched off `nightly-2026-09-10` with the `main..HEAD`
+  counter reset to **0**; the 4 new commits are the only diff above `main`. Worker/queue axis was
+  **not** the source this time: the only jobs since the 09-10 nightly were two `probe-*-2026-09-11`
+  tasks I queued myself at 00:59–01:01 to cold-validate an instruction-surface edit (`worker-runner.log`;
+  results in `logs/claude-probe-*-2026-09-11-*.json`) — no `ci-triage`/delegated session. The night's
+  real material came from the day's **Codex** work, captured in a review artifact
+  (`logs/codex-review-2026-09-11T002928.last.txt`) and folded into two skills:
+  - **`delegate-to-claude`** — the automated `ci-triage` job class was found to **execute untrusted PR
+    branch code under operator credentials (RCE, conf 0.98)**; trigger disabled on pantry `main`
+    (`1f51436`). Added a CRITICAL caveat: don't re-arm PR-branch triage without a credential-free
+    isolation boundary, and its fixed `typecheck/lint/test` repro doesn't even cover 4 of 5 watched
+    workflows.
+  - **`autonomous-ai-agents/codex`** — the pantry `--yolo` **execpolicy is bypassable** (`git -C .`,
+    absolute path, `npx`, wrappers all return `{"matchedRules":[]}`, conf 1.0), so a "14/14 passed"
+    probe was narrower than it sounded. New section: an exec-policy is not a sandbox; real containment
+    is the OS sandbox, and a probe proves only the forms you ran.
+  Infra held flat — `errors.log` **0 new entries since 09-08 21:24:57**, gateway **pid 1483 no new
+  restart**, park window settled — so `hermes-local-gateway-ops` got an honest confirmation roll plus
+  the curator watch: **the projected ~09-11 curator run had NOT yet fired at 03:00** (`run_count` still
+  7, last 09-04; it fires early-afternoon, so that is expected — watch continues into 09-11 afternoon).
+  4 commits: `delegate-to-claude` + `codex` + this file + `hermes-local-gateway-ops`. MEMORY: clean
+  single-file no-op fold (**2026-09-03**, today−8) — see Task 2.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
