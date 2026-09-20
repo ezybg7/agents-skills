@@ -8,12 +8,26 @@ description: The three-part nightly maintenance routine on the m4-mini (SKILLS
 ---
 # Nightly maintenance on the m4-mini
 
-The 03:00 `reflect-<date>` queued job (runs through `claude-worker` — see
-`claude-worker-env` for the shell sandbox) performs three tasks defined in the
-nightly prompt. Every night's session otherwise reconstructs these conventions
-by `jq`-ing the previous four reflection JSONs; they are collected here so a
-fresh session can act instead of re-derive. `<date>` and "today" come from the
-task prompt, not the clock.
+The 03:00 nightly reflection performs three tasks (SKILLS branch / MEMORY fold /
+reflection note), defined in the stage contracts under
+`~/agents/pipelines/nightly-reflection/`. Every night's session otherwise
+reconstructs these conventions by reading the previous reflection notes; they are
+collected here so a fresh session can act instead of re-derive. `<date>` and
+"today" come from the task prompt, not the clock.
+
+**ARCHITECTURE (changed 2026-09-12).** It no longer runs through the
+`claude-worker` queue — that queue was **retired when the Multica board replaced
+it** (preamble archived at `~/agents/_archive/2026-09-12/queue/.preamble.md`).
+`scripts/nightly-reflection.sh` now invokes **`claude -p` directly** with the
+stage-contract task text and writes the result JSON to
+`~/agents/logs/claude-reflect-<date>-*.json` (same name as before). Two live
+consequences: (1) the shell-sandbox premise in `claude-worker-env` no longer
+governs the reflection run — it runs in the user context, not the worker
+allowlist — **though the Bash-tool *analyzer* constraints still bite** (`Contains
+simple_expansion` on loops/captured `$(...)`, the `cd && git` untrusted-hook
+guard), so keep using `git -C <repo>` and literal values, not scripted loops;
+(2) auth is no longer taken from the keychain — see the **cron-auth failure
+mode** below, new as of the migration.
 
 ## Task 1 — SKILLS (branch, don't merge)
 
@@ -36,6 +50,28 @@ task prompt, not the clock.
     branched off `nightly-2026-09-03`** because the 09-04 and 09-05 nightlies both
     died on the 429 (skipped two dates in the chain); the chain stays unbroken as
     long as you branch off whatever HEAD actually is.
+- **KNOWN FAILURE MODE (cron auth) — since the 09-12 switch to `claude -p`, an
+  unattended run cannot see the macOS keychain and fails to authenticate (ran 9
+  nights, 09-12 → 09-20).** Distinct from the 429 below in cause, signature, AND
+  recovery. The 03:00 cron had **no login** after the migration:
+  `claude-reflect-2026-09-{12..19}-*.json` all show `is_error:true,
+  result:"Not logged in · Please run /login", terminal_reason:api_error`, ~70–140
+  ms, 0 tokens — and `~/agents/logs/reflection.log` shows `nightly-reflection:
+  FAILED` for **nine consecutive nights** (last success `done (reflect-2026-09-11)`).
+  **Unlike the 429 it does NOT self-heal** — no session-limit reset fixes a
+  missing credential; a human must install one. **Fix (Everett, 09-19):** the
+  script now exports `CLAUDE_CODE_OAUTH_TOKEN` read from a `600` file
+  `~/agents/.claude_cron_token` written by `claude setup-token` (missing file =
+  fail loudly, value never echoed). **Still UNPROVEN as of 09-20:** that night's
+  03:00 run got a *different* auth signature —
+  `api_error_status:401, result:"Failed to authenticate. API Error: 401 Invalid
+  bearer token"` — because the token in place at 03:00 was stale (the file was
+  rewritten 09-20 11:15, *after* the failure). So a `setup-token` value expires;
+  **the standing check is whether the 03:00 run succeeds the morning after a token
+  refresh — first real proof is the 09-21 run.** Detect the class exactly like the
+  429 (`reflection.log` FAILED + read `.result` in the JSON), but the string is a
+  login / 401-bearer-token message, not a 429. Recovery for a given night is to
+  run the reflection manually in an already-authenticated session (as 09-20 was).
 - **KNOWN FAILURE MODE — the reflect job can 429 on the Claude session limit and
   no-op the WHOLE night (first seen 09-04/09-05).** The 03:00 `reflect-<date>` job
   runs through `claude-worker` on the same Claude account as the daytime
