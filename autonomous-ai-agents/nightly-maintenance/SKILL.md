@@ -62,16 +62,43 @@ mode** below, new as of the migration.
   missing credential; a human must install one. **Fix (Everett, 09-19):** the
   script now exports `CLAUDE_CODE_OAUTH_TOKEN` read from a `600` file
   `~/agents/.claude_cron_token` written by `claude setup-token` (missing file =
-  fail loudly, value never echoed). **Still UNPROVEN as of 09-20:** that night's
+  fail loudly, value never echoed). It was **UNPROVEN on 09-20**: that night's
   03:00 run got a *different* auth signature —
   `api_error_status:401, result:"Failed to authenticate. API Error: 401 Invalid
   bearer token"` — because the token in place at 03:00 was stale (the file was
   rewritten 09-20 11:15, *after* the failure). So a `setup-token` value expires;
-  **the standing check is whether the 03:00 run succeeds the morning after a token
-  refresh — first real proof is the 09-21 run.** Detect the class exactly like the
+  - **PROVEN 2026-09-21 — the fix works and this watch is CLOSED.** The 03:00 cron
+    run authenticated and executed the stages:
+    `claude-reflect-2026-09-21-20260921-030000.json` was created at **03:00 and
+    stayed 0 bytes** (the in-flight state — see "today's own is 0 bytes" under
+    *Mine only genuinely-fresh material*), and `reflection.log` got **no `FAILED`
+    line**, which the script writes on any non-zero exit. The contrast is the tell:
+    all nine failures wrote a small error JSON almost instantly instead — **747–773
+    bytes at 03:00 sharp, 67–2203 ms**. So **a 0-byte reflect JSON at 03:00 means
+    the run is alive; a ~750-byte one means it died on auth** — check that before
+    anything else. A `setup-token` value installed 09-20 11:15 survived to 03:00 the
+    next night (~16 h across a cron boundary); its real lifetime is still unknown,
+    so if the 401 signature returns, refresh the token file first rather than
+    re-diagnosing the class.
+
+  Detect the class exactly like the
   429 (`reflection.log` FAILED + read `.result` in the JSON), but the string is a
   login / 401-bearer-token message, not a 429. Recovery for a given night is to
   run the reflection manually in an already-authenticated session (as 09-20 was).
+- **NEVER edit `scripts/nightly-reflection.sh` while a run is inside it — bash will
+  report a syntax error that is not in the file** (near-miss, 09-20). That manual
+  recovery run started 11:16:37 and finished 11:44; the script was rewritten **187
+  bytes longer at 11:20**, mid-run. Its log
+  (`logs/nightly-reflection-manual-20260920-111637.log`) reads
+  `done → …111637.json` and then `nightly-reflection.sh: line 52: unexpected EOF
+  while looking for matching '"'` — in a file that is **50 lines / 2446 bytes**.
+  Bash reads a script lazily by byte offset, so on resuming it landed inside a
+  string in the now-longer file. The reflection's own work had already completed;
+  only the script's exit status was wrong. Two consequences: a later night reading
+  that log would chase a phantom syntax bug (**`bash -n` the file before believing
+  it**), and a shifted offset could as easily re-execute a command as die on one.
+  Pin the model, swap the token, change anything in that script **before 03:00 or
+  after the run exits**.
 - **KNOWN FAILURE MODE — the reflect job can 429 on the Claude session limit and
   no-op the WHOLE night (first seen 09-04/09-05).** The 03:00 `reflect-<date>` job
   runs through `claude-worker` on the same Claude account as the daytime
@@ -298,6 +325,50 @@ mode** below, new as of the migration.
   7, last 09-04; it fires early-afternoon, so that is expected — watch continues into 09-11 afternoon).
   4 commits: `delegate-to-claude` + `codex` + this file + `hermes-local-gateway-ops`. MEMORY: clean
   single-file no-op fold (**2026-09-03**, today−8) — see Task 2.
+- **09-21 (tonight) — NOT idle, and the first SCHEDULED run to complete since 09-11** (the 09-20
+  entry above was a manual recovery run, so the scheduled path had been dead ten nights). **Branched
+  off `nightly-2026-09-20`**, chain verified with `merge-base --is-ancestor`; the chain above `main`
+  (= `nightly-2026-09-10`, `3056dcf`) is now three branches deep and still unmerged. Two commits:
+  this file + the six untracked skills. The night's material, all of it post-dating the 09-20 11:23
+  survey: **(a)** the cron-auth fix is **proven** — the 0-byte-vs-~750-byte reflect-JSON tell above
+  is the durable part, not the fact of one good night; **(b)** the **mid-run script edit** near-miss
+  (trap above); **(c)** six **untracked skill dirs**, `orchestrator/` among them and edited at 00:55
+  the same night (bullet above). Deliberately **not** recorded here because they were already in a
+  `SKILL.md` or the vault: the router's `todo`-is-not-busy defect and fix (already
+  `orchestrator/SKILL.md:194` — the board session that made the fix documented it itself, which is
+  the system working, and re-recording it here would have been the fabricated edit this runbook warns
+  about) and the `[manual]` native-matrix trap (already `project-multica-runbook.md`). Infra flat and
+  quiet: vault-mirror every 30 min through 02:58 (112 files), 02:30 backup pushed
+  `cf39900..0de291c`, `okf-check` **0 errors / 6 known warnings**, mem 54–78 % free, ollama 200 on
+  every probe, curator unchanged (`run_count=9`, last 09-18 20:27), `errors.log` mtime still frozen
+  **09-16 10:22**, `agent.log` only RESUMED keepalives through 01:22:50. **The worker/queue axis is
+  not idle, it is gone** — `~/agents/queue` no longer exists at all, which is why the survey stage's
+  own contract had to be corrected tonight (see *Where the contract lives*, below). MEMORY: clean
+  single-file fold (**2026-09-13**, today−8) — see Task 2.
+- **Where the contract lives, and when to fix it instead of a skill.** This runbook is *how*; the
+  stage contracts under `~/agents/pipelines/nightly-reflection/` are *what*. When a finding is that a
+  contract is wrong, fix the contract — a skill note about a wrong contract leaves the next run still
+  reading it. **09-21:** `01_survey/CONTEXT.md` still named `~/agents/queue/done|failed` as survey
+  inputs nine days after the queue was retired, so two consecutive runs walked a path that does not
+  exist; the 09-20 run had recorded the retirement *here* and left the contract alone. Contract edits
+  live in the `m4-mini-orchestrator` repo and are committed by the **02:30 backup**, not by you —
+  same rule as Task 2's vault: leave them written, don't commit.
+- **Read `git -C ~/agents/skills status --short` every night — a new skill that
+  nobody committed is a finding.** The repo exists to version agent skills, and
+  nothing else in the system brings a new one under control, so they pile up
+  untracked and unbackupable. Bringing one in on the nightly branch is safe and has
+  precedent (**09-10, `apple-hig`**, commit `cbe6a8f`): the branch is never
+  auto-merged, so it stays fully reviewable. **09-21 swept six at once** —
+  `orchestrator/` (32 KB, the operating procedure every board session loads, and it
+  had been *edited that same night at 00:55* with the router `BUSY_COLUMNS` fix while
+  still having no git history at all), `orchestrator-desk/`, `debug-gate-failure/`,
+  `neon-rehearsal/`, `reddit-research/`, `research-method/`. `skills/.gitignore`
+  covers only `.DS_Store` + curator/usage state, so an untracked skill dir is always
+  drift, never intent. Two cautions: **grep a new skill for credentials before adding
+  it** (the six were checked — env-var *names* and secret-handling rules only, no
+  values), and **leave a tracked-but-`M` file alone** unless tonight's findings name
+  it — `code-graph-usage/SKILL.md` has been modified and uncommitted since 09-11
+  17:49 and is somebody's in-progress edit, not the nightly's to land.
 - **Where findings land** (refine the existing skill, don't spawn near-dupes):
   `claude-worker-env` (shell sandbox / PATH / allowlist), `hermes-local-gateway-ops`
   (gateway, Gemini limits, curator, infra), `github-workflow` (git/PR recipes),
