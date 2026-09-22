@@ -58,15 +58,26 @@ project memory) and `~/agents/references/multica-board.md`. This skill is the pr
   `~/agents/multica/promote.sh <KEY> <column> [actor]` (unassigns first).
 - **`in_review` + assigned to `everettyan` = approved, waiting on merge.** `blocked` + Everett = needs
   his hand. Cards in `backlog` assigned to Everett are his own items; list them, never run them.
-- **Rounds.** The lead pins a head SHA, dispatches both reviewers, consolidates, instruments, resolves
-  the thread, routes: findings → `code` with `review_round` +1; cap 3 → `blocked`; Low/Note only → approve.
+- **Rounds — two per card, and a round reviews the diff (2026-09-21, Everett: "we do NOT need 3 rounds of
+  review — 2 rounds max, both for reviewing the PRD/spec and for reviewing code; code review should only
+  review the diff of what should have changed, not the whole codebase"; the cap was 3).** The lead pins a
+  head SHA, dispatches both reviewers, consolidates, instruments, resolves the thread, routes: findings →
+  `code` with `review_round` +1; **cap 2** — after round 2, Low/Note-only survivors → approve with those
+  survivors listed as `follow-ups:` in the consolidation (you turn the worthwhile ones into a card), any
+  Medium/High survivor → `blocked` with the list for Everett. The key stays `review_round`. **Scope:** a code
+  round reads `origin/main...<head>` — every hunk — plus only the call sites of changed symbols the pack's
+  `blast:` line names; no full-file read outside the diff, no repo-wide audit, no "while I'm here" finding
+  (a caller the diff broke is the one exception). A spec/PRD round reads the spec branch's diff against the
+  PRD it implements and the cross-references it changes; unchanged specs are not re-reviewed. The same cap
+  of 2 governs the planner's spec review (`codex-spec-reviewer`, or `claude-spec-reviewer` in an outage).
   Reviewers never route. Every agent turn ends in a `HANDOFF` block.
 - **Big cards are built in slices, one fresh implementer run per slice (2026-09-14, Everett's t6).** The implementer sizes a first run (>~8 §Acceptance items or >~12 files → 2–4 slices by blast radius, the plan in its first HANDOFF), builds slice 1, drafts the PR, and ends its turn with `open: next-slice: 2/3`; the router's `slice_tick` sees a `code` card with no run in flight whose **newest root comment** is that implementer's marker and calls `multica issue rerun <KEY>` once per k (2 ≤ k ≤ n ≤ 6); the last slice runs the full gates once, `gh pr ready`, and hands to review as one PR. **Trap:** a human comment posted on a slicing card between slices becomes the newest root and the loop stops — `multica issue rerun <KEY>` re-wakes it. Fix rounds are never sliced; a card that fits in one context is built in one run.
   **Round mode since 2026-09-14 (token review t2/t3):** round 1 is a full pass; after a fix round the lead dispatches
   `targeted` by default — previous pinned SHA + new head + the implementer's fix-list — and `full pass` only when the
-  HANDOFF names shared code or the previous round surfaced a High. In any round the reviewers re-run no gate that
-  `gh pr checks` shows green for the exact head. The instrumentation line carries `mode <full|targeted>` — read it to
-  judge the change. Implementers run the full suite at most twice per run (`debug-gate-failure` after the second red).
+  HANDOFF names shared code or the previous round surfaced a High; since 2026-09-21 `full` means **the whole diff**,
+  never the codebase. In any round the reviewers re-run no gate the card's `ci` metadata shows green for the exact
+  head (metadata since 2026-09-20; `gh pr checks` is 403 from every agent seat). The instrumentation line carries
+  `mode <full|targeted> · scope diff` — read it to judge the change. Implementers run the full suite at most twice per run (`debug-gate-failure` after the second red).
 - **Provider roles — no agent reviews its own provider's output (2026-09-12, Everett's rule).** Different
   providers cross-review. So: **gpt-6-astra (`codex-implementer`) is the only implementer**; **Claude reviews
   its code** — the review squad is `review-lead` + `claude-reviewer` + `claude-spec-reviewer`, all Opus, all
@@ -106,10 +117,11 @@ Everett runs **Claude Max 20x ($200/mo)** and **Codex Pro 5x (~$100/mo)**. Claud
 Measured 2026-09-20: since the previous afternoon the orchestrator session and its subagents burned 287M Fable cache reads in 519 turns; the whole board's Fable agents (planner + desk) burned 23.5M. The session's cost is turns × context, and a long loop-tending session is the worst shape for Fable. Rules:
 - **Subagents run on Opus 5** (`model: "opus"` on every Agent call) unless the task is a spec, a design direction or a ruling that needs Fable's judgment — docs pushes, ledgers, apply packages, router patches, probes, measurements are Opus work.
 - **Monitors emit only what the orchestrator acts on**: approve (`in_review member`), `blocked`, `done`, a failed run, the round cap — never every column hop. One turn per event; no status message per hop.
-- **Routine loop-tending is the router's job, not a Fable session's**: merges of approved, green, migration-free PRs and the release of the next queued card belong in the router — **built 2026-09-20** as `merge_tick` and `release_tick`, the queue being card metadata (`queue = <n>` lowest first, `queue_to` = `code`|`todo`) — so the session is woken for exceptions and decisions only.
+- **Routine loop-tending is the router's job, not a Fable session's**: merges of approved, green, migration-free PRs and the release of the next queued card belong in the router — **built 2026-09-20** as `merge_tick` and `release_tick`, the queue being card metadata (`queue = <n>` lowest first, `queue_to` = `code`|`todo`) — so the session is woken for exceptions and decisions only. **Busy is per LANE since 2026-09-21 19:25:** the board runs two single-file loops — the **build** lane (`code`, `in_review`) and the **spec** lane (`todo`, `in_review`) — and a candidate waits only on its own. `code` and `todo` belong to one lane each whatever card sits in them (there the column IS the actor, so a hand-promoted card with no queue metadata still occupies that loop); `in_review` is the only column both pass through, and there the card's own `queue_to` decides — `todo` a spec card, `code` or absent a build card. So an approved spec waiting on Everett's merge no longer holds a bug fix, and a build under review no longer holds the planner. Lowest `queue` still goes first across both lanes; a candidate whose own lane is busy is passed over and keeps its number; with both lanes full nothing moves and nothing is said. Harness 376 → 409; backup `multica-router.py.bak-2026-09-21-spec-lanes`. (It was per KIND 09:23–19:25 — every kind also waiting on the build loop — which is what let AMBR-86, a spec PR approved and waiting for his hand, hold AMBR-85 out of `code` for an afternoon.)
 - **Unattended `claude -p` jobs pin `--model claude-opus-5`** (the nightly reflection does since 2026-09-20).
 - Open a Fable session for decisions, specs and research; run long babysitting on Opus 5 or not at all.
 - **2026-09-21, Everett** (the flow review, "start doing"): the only Fable seats are `claude-planner-fable` and the orchestrator session; every reviewer runs Opus 5 high (`claude-reviewer` xhigh → high); the review's decisions became spec cards queued to the planner (`queue_to: todo`, `queue` 1–10, `claude-planner` capped at one concurrent task) with their build cards created **unqueued** until each spec merges — a build card released before its spec is on `main` is paused by the implementer's spec-first gate.
+- **2026-09-21 19:02, Everett** ("drop levels except for core most important models we need, so leave planner alone and implementor alone"): every non-core seat runs **`medium`** — `review-lead`, `claude-reviewer`, `claude-spec-reviewer`, `codex-spec-reviewer`, `orchestrator-desk`, the research squad (`research-lead`, `researcher-ambry`, `researcher-external`) and `dependabot-maintainer`; only the planners (`claude-planner` xhigh, `claude-planner-fable` max) and the implementers (`codex-implementer` max, `claude-implementer` high) sit above it, so a new non-core seat starts at `medium`. Judged on the `effort` phase of `multica-usage-report.py --phases` (stamp `~/agents/multica/.phase-effort-since`): rounds and findings per card, reviewer reads/run, lead `mode` errors. Rollback `multica agent update <id> --thinking-level high`. Effort is an agent attribute (the daemon blocks `--effort` in custom_args) — per-card effort would mean per-card agent selection, a spec first. Detail: run-economics §"Effort drop on non-core agents".
 
 ## 3. Working the board down — "resolve everything"
 
@@ -134,7 +146,7 @@ never with sleep loops. Rounds take 10–25 min; an implementation ~1–2 h.
 ## 4. Merge authority (memory `feedback-merge-authority`, unchanged since 2026-09-04)
 
 Since 2026-09-20 the **router exercises this same authority unattended** for the one case it can
-prove — `in_review` + Everett, not a draft, MERGEABLE/CLEAN, CI green for that exact head, no
+prove — `in_review` + Everett, MERGEABLE/CLEAN, CI green for that exact head, no
 migration, and the lead's latest consolidation saying approve — one merge a tick. Everything
 below is still yours, and a `merge_tick:` line in the log is the router saying a case is not its.
 
@@ -146,6 +158,32 @@ Docs-only PRs need no CI (`ci.yml` ignores `*.md`) — say so, do not call it "g
 under an overnight policy he set — flag it in the morning), **production database applies**
 (apply-before-merge: a migration PR waits), Worker deploys, vendor consoles, paid builds, anything on a
 phone, anything financial. Stacked PRs: retarget dependents first (`feedback-stacked-pr-merge`).
+
+- **2026-09-21 — the router readies an approved draft, so do not do it by hand.** A draft flag an
+implementer run left behind is not a second opinion about work the lead has approved. When
+`merge_tick` finds a card where every other condition holds and the only failing check is
+`isDraft`, it runs `gh pr ready <n>` **once**, logs `readied <KEY> #<n> (approved draft)`, reads
+the PR back through `gh` and merges on the same tick. **Trap:** a card still logging
+`merge_tick: <KEY> #<n> — the PR is still a draft` has something ELSE wrong with it — red CI, a
+migration, no approve from the lead, a state GitHub will not call MERGEABLE, or a `gh pr ready`
+GitHub refused — because the router says that one line for every draft it will not ready. Read
+the card before touching the flag: readying it yourself merges nothing and hides the real block.
+AMBR-113's #281 sat approved, green and migration-free for over two hours (15:03–17:20) waiting
+for the hand that is now the router's.
+
+- **2026-09-21 — the router never merges a SPEC card; it marks it and you ask Everett.**
+Specs and PRDs are his, always — and a spec card reaches the very state an approved build
+card does: `in_review` + Everett, `MERGEABLE`/`CLEAN`, no migration, and `ci` reading **green**
+because `ci.yml` ignores `*.md`, so a docs-only PR gets no checks at all. `merge_tick` now tells
+one by the card's `queue_to: todo` **or** by every changed path matching
+`^(specs/|docs/|.*\.md$|SPEC\.md|README\.md)`; for one that otherwise qualifies it logs
+`merge_tick: <KEY> #<n> — spec PR, Everett merges (approved <ISO>)` **once per head**, writes
+`spec_approved = <sha>:<ISO>` on the card, and stops — no merge, no `gh pr ready` (a draft
+spec PR logs the ordinary draft line and keeps its flag), no CI gate. **Your sweep reads that
+key:** a card carrying `spec_approved` is approved work waiting on Everett's hand — put it to
+him, never merge it yourself (the one exception is the overnight spec policy above, flagged in
+the morning). It spends none of the tick's one merge, so an approved build card behind it still
+merges on that tick. AMBR-86 (spec 67, PR #278) is the card this was written for.
 
 ## 5. Production applies — rehearse everything, apply nothing without the words
 
@@ -182,7 +220,7 @@ A setup failure is fixed in the source that produced it, then recorded, in the s
   the desktop app's shell cwd resets after every command — absolute paths; a command that names a
   credential file (even `stat`) is denied — never reference them; `launchctl list`/`ps` probes may be
   denied — use `launchctl print gui/501/<label>`. **Router, since 2026-09-14:** `list_issues()` pages through `issue list` (page 1 alone held 50 of 60 cards and hid AMBR-56 from routing); the harness `multica-router.test.py` (119 assertions) runs before and after any router change; swap the live file atomically (temp + `os.replace`) because the LaunchAgent re-execs it every 60 s; orchestrator-side router code is an Opus subagent's job with a backup `multica-router.py.bak-<date>`. **Never print `custom_env` values** — `multica agent env get` returns them in clear; build a replacement map with `****` in python and print keys only.
-- **Traps learned 2026-09-13:** `issue create --output json` **echoes the description** — parse `.identifier`, never `grep -o AMBR-` (the grep caught a card named inside the brief and `promote.sh` mis-routed the live card); **a squad lead does not resume on a bare `issue rerun`** once it has dispatched — after fixing a failed member (model, env), comment the lead with the re-dispatch instruction or it evaluates "no new input" and sleeps; **a multi-milestone spec's shared `specs/README.md` status row** — tell every milestone card to leave it and flip it once after the last merge, or each PR conflicts with its siblings; **a card stranded `in_review`/squad with no active run after a Claude "session limit" failure** — `issue rerun` re-wakes the lead, there is no automatic retry; **a cap-3 escalation whose survivors are a localized regression** ("two one-line fixes with a test each") gets one bounded round 4 (`metadata set --key review_round --value 4`, a scope ruling, then Code) — a design fork goes to Everett instead.
+- **Traps learned 2026-09-13:** `issue create --output json` **echoes the description** — parse `.identifier`, never `grep -o AMBR-` (the grep caught a card named inside the brief and `promote.sh` mis-routed the live card); **a squad lead does not resume on a bare `issue rerun`** once it has dispatched — after fixing a failed member (model, env), comment the lead with the re-dispatch instruction or it evaluates "no new input" and sleeps; **a multi-milestone spec's shared `specs/README.md` status row** — tell every milestone card to leave it and flip it once after the last merge, or each PR conflicts with its siblings; **a card stranded `in_review`/squad with no active run after a Claude "session limit" failure** — `issue rerun` re-wakes the lead, there is no automatic retry; **an escalation at the cap whose survivors are a localized regression** ("two one-line fixes with a test each") gets **one bounded extra round on your explicit ruling** (`metadata set --key review_round --value <cap+1>`, a scope ruling naming exactly the survivors it may touch, then Code) — a design fork goes to Everett instead. Since **2026-09-21 the cap is 2**, so that bounded round is **round 3** (it was round 4 under cap 3, AMBR-43 2026-09-13); the lead never starts one itself — it sets `blocked` where it would otherwise have opened round 3.
 - **Reading the router (2026-09-14):** slicing and paging are in §2 and the line above; what to expect in `~/agents/logs/multica-router.log` is `assigned <KEY> (<col>) <from> -> <to>` and `slice k/n of <KEY> — fresh run for <agent>` — a silent log is healthy **only** when `launchctl print gui/501/com.user.multica-router` shows `runs` climbing and `last exit code = 0` — a dead router is silent too: on 2026-09-15 it was down 05:45→~11:00 because `/usr/bin/python3` had become Xcode's license stub (exit 69, "You have not agreed to the Xcode license agreements"); the plists now exec `/opt/homebrew/bin/python3` and every `~/agents/**/*.py` shebang is pinned to it. **Rule:** python from launchd, cron, or a Bash call without the §1 PATH export is `/opt/homebrew/bin/python3`, never bare `python3`. `multica-router.err` holds a stale Sep-11 `'multica'` not-found traceback — the router resolves `/usr/local/bin/multica` itself; check the file's mtime before believing it. **Why slices are cheap:** `issue rerun` pins a fresh session, while every other run on a card resumes the prior session — that is why fix rounds used to cost as much as builds (AMBR-57: slices 0.6M / 6.7M / 13.3M cache reads, fix round 9.2M resumed under the compaction ceiling); the ceiling matters most on resumed runs.
 
 - **A system LaunchDaemon with `KeepAlive` is stopped with `bootout` AND `disable`, or the next reboot brings it back** (2026-09-16→19: `com.user.actions-runner-jit` returned after the Sep 16 reboot and half-created a `job-*` account every five minutes for three days — 1,189 records — while everyone believed it was stopped on the 13th). The installer runs `launchctl enable` before `bootstrap`, so `disable` is always safe. A deferred daemon gets a `pgrep -f` line in the session-start check, and the watchdog counts `dscl . -list /Users | grep -c '^job-'`.
