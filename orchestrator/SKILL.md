@@ -317,3 +317,12 @@ caches, which are worth ~3 GB at best. The app's terminal pane sometimes echoes 
 sudo prompt (password never reaches sudo); a fresh tab worked. Give `du -d 1 | tee`, never bare
 `du -s`, so the user sees lines stream. Durable fix still open: a LaunchDaemon running the same find
 daily (needs Everett's sudo to install).
+
+**Collateral: a full disk also breaks hermes' kanban dispatcher**, not just the router
+(2026-09-23 19:25:18 and 2026-09-24 00:35:22, `~/.hermes/logs/errors.log` /
+`gateway.log`: `kanban dispatcher: tick failed on board default` →
+`sqlite3.OperationalError` — `unable to open database file`, then `disk I/O error`
+— from `apply_wal_with_fallback` in `hermes_state.py:426`). Both ticks self-recovered
+once space was freed, same as the router's own `OSError: [Errno 28]` — no action
+needed beyond clearing the disk, but expect this trace too during a full-disk episode
+rather than reading it as a second, unrelated problem.
