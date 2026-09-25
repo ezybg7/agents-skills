@@ -326,3 +326,39 @@ daily (needs Everett's sudo to install).
 once space was freed, same as the router's own `OSError: [Errno 28]` — no action
 needed beyond clearing the disk, but expect this trace too during a full-disk episode
 rather than reading it as a second, unrelated problem.
+
+### Route builds by size (Everett, 2026-09-24)
+Big, complicated builds — multi-slice milestones, migrations, new data models, Worker changes — go to
+`codex-implementer` (the code column's default; leave `pin_actor` unset). Less complicated ones —
+follow-ups, single-slice fixes, flow-only or docs changes, craft passes — get `pin_actor
+claude-implementer` when the card is created or queued. This reserves the Codex usage window for the
+work that needs it. Outage mode still routes everything to Claude while Codex is out, so a big card
+never needs a Claude pin "because Codex is out" — remove such pins. The planner writes `size:
+big|small` in its PACK · pre-build; the orchestrator pins from that line.
+
+### The clone is the rig's while a rig job runs (2026-09-24)
+`~/code/pantry` is the working tree the rig builds from. While a device-pass or suite subagent is
+running, the orchestrator does not `git checkout`, `pull`, run jest or anything else in that clone —
+on 2026-09-24 08:56 a `checkout main && pull` under a running #318 build made Metro bundle main's JS
+and voided the check. Docs pushes use a throwaway worktree (`git worktree add /tmp/wt-… origin/main`);
+a local test run uses a worktree too. If it happens anyway: kill the xcodebuild, tell the subagent to
+re-checkout and rebuild, and void the log.
+
+### A PR with no CI runs is usually unmergeable (2026-09-24)
+GitHub does not run `pull_request` workflows on a PR whose merge with `main` conflicts (mergeable
+`CONFLICTING`/`DIRTY`, or `UNKNOWN` for long). Before retriggering CI (close/reopen, empty commits —
+both useless in that state), read `gh pr view <n> --json mergeable,mergeStateStatus`. Conflicting →
+a bounded merge-main round for the implementer; the review approval stands for the diff and the
+lead's next round is targeted to the resolution.
+
+### Native-input baseline (2026-09-24)
+The rig's native-input check compares against the last prebuild (`954960a2`). The only `package.json`/lockfile change since is the `playwright` devDependency (JS only, spec 70 mocks); it is the accepted baseline and does not block a build. Anything else in the native-input list still does.
+
+### Rig secrets: never print a Maestro `commands.json` (2026-09-24)
+Maestro's debug output stores `-e` values (TEST_PASSWORD) in clear in `commands.json` under `~/.maestro/tests/<run>/`. Never cat it; read step names from the flow log instead. A grep meant to mask step 5 of specs/README.md must be tested on a dummy first. After any slip, redact the run folder, `~/.maestro/tests`, and the session temp dir (`/private/tmp/claude-501/...`), count, second pass zero, and tell Everett (rotation is his call).
+(Clarification, same day: `git fetch` and `git worktree add /tmp/… origin/main` from that repo only touch `.git` metadata and remote refs, not the checkout's HEAD, index or working tree — docs pushes through a throwaway worktree are safe during a rig job. `checkout`, `pull`, `merge`, `stash`, `reset`, `clean` and any test run in the clone itself are not.)
+Orchestrator-seat safe clears (2026-09-24, worth ~5 GB): `~/Library/Caches/{Google,CocoaPods,puccinialin,com.anthropic.claudefordesktop.ShipIt,com.spotify.client,dotslash}`, `npm cache clean --force`, `find ~/agents/runs -type d -name '*-artifacts' -mtime +0` (evidence screenshots are copied out of them first). Keep `~/Library/Caches/ms-playwright` (the mocks renderer) and `ReactNative` (Metro cache).
+Data API schema cache (2026-09-24, r4): after a migration on the acceptance branch — and after resetting it back — `neonctl data-api refresh-schema` ×3 (20 s apart), then probe `select=*` over 8 fresh connections; if any non-200, refresh ×3 again and re-probe until 0. One triple refresh left 6/160 reads stale on 2026-09-24 20:49.
+
+### Dispatching the designer without a planner (2026-09-25)
+The `designer` seat starts only on a dispatch comment (planner's or the orchestrator's) on a Todo card that names a `spec/<feature>` branch to push to; a column assignment alone makes it post "I didn't start this card". For an orchestrator-created design card: `git push origin origin/main:refs/heads/spec/<feature>` from the clone (refs only, safe during a rig job), then an @mention comment with the branch, the mock folder and the page slugs. AMBR-153 lost 35 minutes to this on 2026-09-25 00:32.
