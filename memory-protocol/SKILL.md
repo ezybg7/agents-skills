@@ -24,7 +24,14 @@ frontmatter, cross-linked, with an `index.md` at every level. Rules:
 ## After finishing a task
 
 1. Append a handoff note to `~/agents/memory/daily-log/<YYYY-MM-DD>.md`: what was
-   done, decisions made, open items, files touched.
+   done, decisions made, open items, files touched. **If you wrote that file
+   with `write_note` (or it's the first write of the day, a fresh file), run
+   `okf-normalize.py` on it too** — not just on new concept files. Confirmed
+   2026-09-26: a same-day daily-log created this way landed with a stacked
+   `permalink`-only frontmatter block ahead of the real one (`type: daily-log`
+   in the second block, invisible to the parser), failed `okf-check` O3, and
+   was already committed to `main` by the 02:30 backup before anyone
+   normalized it.
 2. A durable fact goes in **its own concept file**, not appended to whatever note
    is nearest:
 
