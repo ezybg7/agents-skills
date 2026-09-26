@@ -24,14 +24,24 @@ frontmatter, cross-linked, with an `index.md` at every level. Rules:
 ## After finishing a task
 
 1. Append a handoff note to `~/agents/memory/daily-log/<YYYY-MM-DD>.md`: what was
-   done, decisions made, open items, files touched. **If you wrote that file
-   with `write_note` (or it's the first write of the day, a fresh file), run
-   `okf-normalize.py` on it too** — not just on new concept files. Confirmed
-   2026-09-26: a same-day daily-log created this way landed with a stacked
-   `permalink`-only frontmatter block ahead of the real one (`type: daily-log`
-   in the second block, invisible to the parser), failed `okf-check` O3, and
-   was already committed to `main` by the 02:30 backup before anyone
-   normalized it.
+   done, decisions made, open items, files touched. **Check its frontmatter by
+   eye if the file is new or you didn't write the leading block yourself —
+   don't assume `okf-normalize.py` (backup.sh already runs it on every `.md`
+   nightly) will fix a stacked block for you.** It only collapses a stacked
+   block losslessly when the *leading* block already has every required field;
+   if the leading block is incomplete (e.g. a `permalink`-only stub), it infers
+   the missing fields from the first block alone and scans the rest — including
+   the second, real block — as plain body text, so a good `type`/`title`/
+   `description` sitting in block two is never read and the leading stub wins.
+   Confirmed 2026-09-26: `memory/daily-log/2026-09-26.md` landed with exactly
+   this shape, failed `okf-check` O3, was committed to `main` by the 02:30
+   backup with the error still in it, and re-running `okf-normalize.py` on it
+   by hand made it worse (`description: 'type: daily-log'`, lifted verbatim
+   from the second block's first line). The only reliable fix today is by
+   hand: keep the last (real) block, delete the leading one. The script itself
+   (`scripts/okf-normalize.py`, the `nblocks > 1 and not changes` branch)
+   needs its multi-block merge fixed to handle this case — not done tonight;
+   flagged for whoever picks up `okf-normalize.py` next.
 2. A durable fact goes in **its own concept file**, not appended to whatever note
    is nearest:
 
