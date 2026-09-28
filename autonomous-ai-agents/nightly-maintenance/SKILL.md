@@ -125,6 +125,32 @@ mode** below, new as of the migration.
     interactive days ended the 03:00 job had headroom again — the failure is real but
     load-triggered (expect it only after a very heavy interactive day; the chain
     self-heals the next quiet night, and branch-off-live-HEAD absorbs the gap).
+- **KNOWN FAILURE MODE (collision stand-down) — a run that detects a
+  perceived duplicate `claude -p` process can stand down and do NOTHING, yet
+  `reflection.log` still logs it as `done` (first seen 2026-09-27 03:00).**
+  `claude-reflect-2026-09-27-20260927-030000.json` (4816 bytes, so not a
+  crash/auth failure — those are 0 or ~750 bytes) has `result`: the session
+  saw what it read as a second in-flight `claude -p` process (PID 6359)
+  running the identical task, declared a "collision," made no edits, and
+  asked a yes/no question that nobody could answer (the job is
+  non-interactive) before exiting. `claude -p --output-format json` exits 0
+  on that outcome, so `nightly-reflection.sh` wrote `done`. Corroborating
+  absence-of-work: no `nightly-2026-09-27` branch was ever created in
+  `~/agents/skills`; no `01_survey/output/findings-2026-09-27.md` exists;
+  `memory/daily-log/2026-09-27.md` has zero mentions of a nightly-reflection
+  report. **This means `reflection.log` alone cannot distinguish a real run
+  from a no-op one** — the cron-auth failure mode above at least fails loud
+  (a small, fast, `FAILED`-logged JSON); this one fails silent and green.
+  Root cause of the phantom concurrent PID is unestablished (crontab
+  configuration is outside every stage's input list, so no session has
+  checked it as of 2026-09-28). **Consequence absorbed the same way as a
+  429:** the branch chain skipped a date (`nightly-2026-09-26` →
+  `nightly-2026-09-28` directly) and `orchestrator/SKILL.md` carried two
+  nights of uncommitted live-session content into the 09-28 branch instead
+  of one. **If `reflection.log` shows `done` but tonight's json's `.result`
+  reads as a question/refusal rather than a stage report, treat it as a
+  no-op night** — check for the branch and findings file before trusting the
+  log line.
 - **Mine only genuinely-fresh material.** Sources:
   - `jq -r '.result' ~/agents/logs/claude-reflect-<date>-*.json` — the recent
     daily reflections (these session-result JSONs hold the distilled text in
