@@ -127,30 +127,53 @@ mode** below, new as of the migration.
     self-heals the next quiet night, and branch-off-live-HEAD absorbs the gap).
 - **KNOWN FAILURE MODE (collision stand-down) — a run that detects a
   perceived duplicate `claude -p` process can stand down and do NOTHING, yet
-  `reflection.log` still logs it as `done` (first seen 2026-09-27 03:00).**
-  `claude-reflect-2026-09-27-20260927-030000.json` (4816 bytes, so not a
-  crash/auth failure — those are 0 or ~750 bytes) has `result`: the session
-  saw what it read as a second in-flight `claude -p` process (PID 6359)
-  running the identical task, declared a "collision," made no edits, and
-  asked a yes/no question that nobody could answer (the job is
-  non-interactive) before exiting. `claude -p --output-format json` exits 0
-  on that outcome, so `nightly-reflection.sh` wrote `done`. Corroborating
-  absence-of-work: no `nightly-2026-09-27` branch was ever created in
-  `~/agents/skills`; no `01_survey/output/findings-2026-09-27.md` exists;
-  `memory/daily-log/2026-09-27.md` has zero mentions of a nightly-reflection
+  `reflection.log` still logs it as `done` (seen 2026-09-27, 09-30, 10-01 —
+  three nights out of six, roughly every other night the window covers).**
+  `claude-reflect-2026-09-27-20260927-030000.json` (4816 bytes),
+  `claude-reflect-2026-09-30-20260930-030001.json` (5044 bytes), and
+  `claude-reflect-2026-10-01-20261001-030000.json` (4466 bytes) are all the
+  same shape — not a crash/auth failure, those are 0 or ~750 bytes — and
+  `result` is always: the session sees what it reads as a second in-flight
+  `claude -p` process (PID 6359 / 33821 / 58059) running the identical task,
+  declares a "collision," makes no edits, and asks a yes/no question that
+  nobody can answer (the job is non-interactive) before exiting. `claude -p
+  --output-format json` exits 0 on that outcome, so `nightly-reflection.sh`
+  wrote `done` all three times. Corroborating absence-of-work each time: no
+  `nightly-<that-date>` branch was ever created in `~/agents/skills`; no
+  `01_survey/output/findings-<that-date>.md` exists; that date's
+  `memory/daily-log/<date>.md` has zero mentions of a nightly-reflection
   report. **This means `reflection.log` alone cannot distinguish a real run
   from a no-op one** — the cron-auth failure mode above at least fails loud
   (a small, fast, `FAILED`-logged JSON); this one fails silent and green.
-  Root cause of the phantom concurrent PID is unestablished (crontab
-  configuration is outside every stage's input list, so no session has
-  checked it as of 2026-09-28). **Consequence absorbed the same way as a
-  429:** the branch chain skipped a date (`nightly-2026-09-26` →
-  `nightly-2026-09-28` directly) and `orchestrator/SKILL.md` carried two
-  nights of uncommitted live-session content into the 09-28 branch instead
-  of one. **If `reflection.log` shows `done` but tonight's json's `.result`
-  reads as a question/refusal rather than a stage report, treat it as a
-  no-op night** — check for the branch and findings file before trusting the
-  log line.
+  **Root cause, established 2026-10-02:** there is no second process. `ps
+  aux` on a clean night (10-02, 03:01:48 EDT, while that night's own run was
+  live) showed exactly one `claude -p` process, with parent chain `/bin/sh -c
+  nightly-reflection.sh` → `bash nightly-reflection.sh` → `claude -p
+  "Nightly reflection for <date>..."`, started at `:00:01` — structurally
+  identical to what the 09-27/09-30/10-01 runs each described as a
+  *second, colliding* process (same three-link chain, same `:00:01` start
+  offset, same task text, because it is the same task text: their own). A
+  non-interactive `claude -p` invocation has no built-in way to learn its own
+  PID and exclude itself from a `ps aux` scan, so a run that checks for
+  collisions by grepping `ps aux` for its own task text will find itself and
+  can misread that as a sibling. **Fix: do not run a `ps aux`-for-collision
+  check from inside the pipeline at all.** There is nothing in the four
+  stage contracts that calls for one — cron fires `nightly-reflection.sh`
+  once, it execs exactly one `claude -p` child, and that child seeing its own
+  `sh → bash → claude -p` ancestry in a process listing is normal, not a
+  signal. If a future run is tempted to check for concurrent invocations,
+  the one safe method is comparing `$PPID`'s ancestry against the *other*
+  candidate PID's ancestry, not scanning for matching task text — matching
+  task text is guaranteed on every run, self included. **Consequence
+  absorbed the same way as a 429, now three times over:** each stand-down
+  skips the branch chain forward past its own date (`09-26 → 09-28`, then
+  `09-29 → 10-02` once this branch lands) and lets anything installed during
+  the skipped days (e.g. `playwright-cli/`, `web-design-library/`, both
+  installed 09-29 10:20–10:38 and still untracked as of 10-02 — see
+  `findings-2026-10-02.md`) sit uncommitted an extra night or two. **If
+  `reflection.log` shows `done` but that night's json's `.result` reads as a
+  question/refusal rather than a stage report, treat it as a no-op night** —
+  check for the branch and findings file before trusting the log line.
 - **Mine only genuinely-fresh material.** Sources:
   - `jq -r '.result' ~/agents/logs/claude-reflect-<date>-*.json` — the recent
     daily reflections (these session-result JSONs hold the distilled text in
