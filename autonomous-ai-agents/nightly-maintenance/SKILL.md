@@ -125,6 +125,19 @@ mode** below, new as of the migration.
     interactive days ended the 03:00 job had headroom again — the failure is real but
     load-triggered (expect it only after a very heavy interactive day; the chain
     self-heals the next quiet night, and branch-off-live-HEAD absorbs the gap).
+  - **NEW VARIANT, 10-09 — the same 429 class, a different cap: `result:"You've
+    hit your weekly limit · resets 3am (America/New_York)"`** (`duration_ms:448`,
+    1 turn, 0 tokens — same shape otherwise as the session-limit JSON, just
+    "weekly" not "session" in the string and a fixed-clock reset instead of a
+    rolling one). `grep -l "weekly limit" ~/agents/logs/claude-reflect-*.json`
+    matches only this one date across the whole log directory, so treat "weekly"
+    vs "session" as two distinguishable sub-signatures of the same failure mode,
+    not typos of each other — the recovery is identical (self-heals, branch off
+    live HEAD, Task 2 gets a backlog) but the reset clock is fixed-time, not
+    session-relative, so a repeat is more predictable: expect it near the account's
+    weekly reset boundary after a heavy week, not tied to same-day load like the
+    session variant. 10-10's run (same 03:00 slot, next day) succeeded, confirming
+    the cap had reset by then.
 - **KNOWN FAILURE MODE (collision stand-down) — a run that detects a
   perceived duplicate `claude -p` process can stand down and do NOTHING, yet
   `reflection.log` still logs it as `done` (seen 2026-09-27, 09-30, 10-01 —
