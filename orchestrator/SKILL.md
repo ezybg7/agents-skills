@@ -479,3 +479,6 @@ bash reads a script incrementally; an edit under a running rig shifted the bytes
 
 ### Near-miss 2026-10-11 — a superseded rig retry's `index.md` never gets linked, trips okf-check's orphan gate
 A rig run that gets retried (AMBR-290-rig-`12502c3e` → `-3` through `-6`) leaves its earlier attempt's `runs/<...>/index.md` on disk with `status: "running"` and an empty RIG comment; once the daily-log entry only cites the later retries, nothing links the abandoned one and `okf-check.py`'s O4 orphan check flags it (`runs/2026-10-10-AMBR-290-rig-12502c3e-2/index.md: orphan — not reachable by links`, 0 → 1 error overnight). Link every retry's `index.md` from the daily-log entry — even a `status: "running"` one that never finished — or delete the directory once superseded; don't leave it for the next okf-check run to catch.
+
+### Rule 2026-10-11 — after `npm ci` in `~/code/pantry`, regenerate the ExpoWidgets bundle
+`cd ~/code/pantry && PROJECT_DIR=~/code/pantry/ios/Pods node_modules/expo-widgets/scripts/with-node.sh node_modules/expo-widgets/scripts/build-bundle.mjs ~/code/pantry` — the standing Pods copy `node_modules/expo-widgets/bundle/build/ExpoWidgets.bundle` from the clone by absolute path, and `npm ci` deletes it (AMBR-293's build failed on it). See pantry-gotchas.
