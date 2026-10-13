@@ -488,3 +488,15 @@ Same hazard as tour-rig.sh: `specmerge.sh` was patched (the resolver hook) while
 
 ### Rule 2026-10-12 — never run `okf-index.py` over `~/agents/runs`
 It recurses into every run folder (logs/, screens/, tmp/, flows/…) and writes a `type: index` file in each, rewrites the tracked run indexes, and appends `[screens/](screens/index.md)` lines to the rigs' own `index.md` → ~500 okf errors. Recovery took `git checkout -- runs/` plus deleting every untracked `index.md` whose head says `type: index` + `Index of`. For a single orphaned run, append one link line to `runs/index.md` by hand. `okf-index.py` is safe on `memory/<area>` only.
+
+### Rule 2026-10-13 — don't chain a `local` declaration onto a var the same statement hasn't assigned yet
+`local a=$1 d="$RUN/$a"` expands `$a` for the second assignment before the first one lands, so under `set -u` it dies with "unbound variable" before the function body ever runs. AMBR-316's first evidence-run attempt (01:19) died on exactly this and dropped `rig.lock` mid-run; recovered by holding the simulator with a nohup `sleep` whose pid sits in `rig.lock/pid` (tour-rig's staleness check needs a live pid) while the script was fixed. Split it: `local a=$1; local d="$RUN/$a"`.
+
+### Rule 2026-10-13 — `tour-rig.sh` drops `rig.lock` on process exit; hold it across a multi-step by-hand chain
+Each `tour-rig.sh` invocation releases the lock the moment its process exits, so a chain of several by-hand steps run as separate processes leaves a gap between them. It happened: AMBR-316's by-hand run took the lock at 23:57 during AMBR-293's round-3 chain (2026-10-12), voiding that attempt and running against the same PR's acceptance Worker. Start a `lockhold.sh` (or equivalent) that holds the lock for the whole chain, or run every step inside one script/process — don't let the lock go free between steps.
+
+### Lesson 2026-10-13 — AMBR-293 round-3 by-hand rig, four device-testing gotchas
+- A by-hand worktree needs root `node_modules` for `run-acceptance.mjs`'s `js-yaml` — a symlink to the clone's is enough when the PR leaves package.json/lock untouched.
+- `74c` ends on the Week tab, so a tour run right after it only exercises the Week-already-selected branch of a day/week chooser; select Day by hand first to cover the other path.
+- The first-run stage's candidate count tracks the account's own Milk-matching recipes, not a fixed number: 15 right after `74a` (AX5 rows ~430pt, times out a 10s scroll), 0 right after a bare reset (copied recipes don't use Milk), exactly 3 right after `74c` — stage first-run checks there.
+- Maestro text selectors are full-match regexes against the accessible label (e.g. `Focus, None`), not substrings — an ad-hoc scroll check that assumes substring matching will fail even when the app is correct.
