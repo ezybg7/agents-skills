@@ -482,3 +482,9 @@ A rig run that gets retried (AMBR-290-rig-`12502c3e` → `-3` through `-6`) leav
 
 ### Rule 2026-10-11 — after `npm ci` in `~/code/pantry`, regenerate the ExpoWidgets bundle
 `cd ~/code/pantry && PROJECT_DIR=~/code/pantry/ios/Pods node_modules/expo-widgets/scripts/with-node.sh node_modules/expo-widgets/scripts/build-bundle.mjs ~/code/pantry` — the standing Pods copy `node_modules/expo-widgets/bundle/build/ExpoWidgets.bundle` from the clone by absolute path, and `npm ci` deletes it (AMBR-293's build failed on it). See pantry-gotchas.
+
+### Rule 2026-10-12 — never edit a helper script while a loop is running it
+Same hazard as tour-rig.sh: `specmerge.sh` was patched (the resolver hook) while a merge loop was reading it → `syntax error near unexpected token` and the dependency merges silently skipped. Patch a copy, or wait for the loop to end. Helpers live in `~/agents/scripts/` now (`specmerge.sh`, `specmerge-resolve.py`, `board-watch.sh`, `m0-live.sh`); `/private/tmp` does not survive a reboot.
+
+### Rule 2026-10-12 — never run `okf-index.py` over `~/agents/runs`
+It recurses into every run folder (logs/, screens/, tmp/, flows/…) and writes a `type: index` file in each, rewrites the tracked run indexes, and appends `[screens/](screens/index.md)` lines to the rigs' own `index.md` → ~500 okf errors. Recovery took `git checkout -- runs/` plus deleting every untracked `index.md` whose head says `type: index` + `Index of`. For a single orphaned run, append one link line to `runs/index.md` by hand. `okf-index.py` is safe on `memory/<area>` only.
