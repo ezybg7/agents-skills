@@ -505,3 +505,9 @@ Each `tour-rig.sh` invocation releases the lock the moment its process exits, so
 - Maestro's `scrollUntilVisible` swipes from the **screen centre**. A half-detent form sheet at AX5 sits below the centre, so the swipe hits the backdrop and nothing moves — no timeout fixes it. Expand the sheet first (`swipe: from: text: 'Sheet Grabber', direction: UP`) under the README's `notVisible` guard, then scroll.
 - At AX5 a `scrollUntilVisible` cycle costs ~3.5 s; 10 s = three swipes. Long lists need 45–60 s. But with `centerElement: true` on an element already on screen, Maestro spends the whole timeout centring — keep 10 s where the target is in view.
 - Maestro's debug output (`maestro.log`, hierarchy dumps) is the evidence an implementer needs; the rig deletes it (secrets). Re-run the tour by hand with `--debug-output`, redact, and post excerpts. Codex cannot run the simulator: when a tour fails on labels/scrolling, a probe agent that fixes the YAML on the device beats a blind Code round.
+
+### Lessons 2026-10-14 — four traps from the AMBR-296 probe + tour-fix session
+- zsh treats `$VAR:refs/…` and `$H:src/…` as history modifiers, expanded before the variable they're built from is even assigned — a push built that way fails silently with no error to grep for. Brace the variable: `${NEW}:refs/heads/…`.
+- A probe-folder redaction pass must skip the worktree (`wt/`) — run unguarded, it rewrote 28 files under one session's `wt/` before being caught; recover with `git checkout`, and don't let it reach a commit.
+- `echo ====` is not a literal echo in zsh — the bare `=cmd` form triggers equals-expansion. Quote it (`echo "===="`) or use `printf`.
+- The Read tool's image hook can time out and take down the whole session with it. When a device probe needs to hand off evidence, prefer Maestro hierarchy dumps (text) over screenshots — they carry the same evidence without the hook risk.
