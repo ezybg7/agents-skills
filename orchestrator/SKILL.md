@@ -500,3 +500,8 @@ Each `tour-rig.sh` invocation releases the lock the moment its process exits, so
 - `74c` ends on the Week tab, so a tour run right after it only exercises the Week-already-selected branch of a day/week chooser; select Day by hand first to cover the other path.
 - The first-run stage's candidate count tracks the account's own Milk-matching recipes, not a fixed number: 15 right after `74a` (AX5 rows ~430pt, times out a 10s scroll), 0 right after a bare reset (copied recipes don't use Milk), exactly 3 right after `74c` — stage first-run checks there.
 - Maestro text selectors are full-match regexes against the accessible label (e.g. `Focus, None`), not substrings — an ad-hoc scroll check that assumes substring matching will fail even when the app is correct.
+
+### Lessons 2026-10-13 — AX5 tours (from the AMBR-316 probes)
+- Maestro's `scrollUntilVisible` swipes from the **screen centre**. A half-detent form sheet at AX5 sits below the centre, so the swipe hits the backdrop and nothing moves — no timeout fixes it. Expand the sheet first (`swipe: from: text: 'Sheet Grabber', direction: UP`) under the README's `notVisible` guard, then scroll.
+- At AX5 a `scrollUntilVisible` cycle costs ~3.5 s; 10 s = three swipes. Long lists need 45–60 s. But with `centerElement: true` on an element already on screen, Maestro spends the whole timeout centring — keep 10 s where the target is in view.
+- Maestro's debug output (`maestro.log`, hierarchy dumps) is the evidence an implementer needs; the rig deletes it (secrets). Re-run the tour by hand with `--debug-output`, redact, and post excerpts. Codex cannot run the simulator: when a tour fails on labels/scrolling, a probe agent that fixes the YAML on the device beats a blind Code round.
