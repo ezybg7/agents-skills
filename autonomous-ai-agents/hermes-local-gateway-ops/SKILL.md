@@ -319,6 +319,30 @@ real for the first time here on **2026-07-24 13:27 local (17:27 UTC),
   ahead. Watch continues into 09-11 afternoon — if it fires, expect `run_count`
   7→8 and another `auto: no changes`; maintained skills stay safe (still absent
   from the sidecar / `pinned:false`).
+- **2026-10-24 — first curator entry since the 09-12 Multica-board transition (this
+  section went unmaintained 09-11→10-23 because the old claude-worker-queue runbook
+  it lived under was retired, not because the curator went quiet — it kept running
+  weekly on its own clock regardless of which pipeline watches it), and the run
+  caught is the first-ever 100%-archive.** `.curator_state`: `run_count` now **14**,
+  `last_run_at` **2026-10-23T21:55:33 UTC**, `last_run_summary: "auto: 71 archived;
+  llm: skipped (consolidation off)"`. `~/.hermes/logs/curator/20261023-215533/run.json`:
+  `auto_transitions.checked: 71, archived: 71` — but `counts.before: 0, counts.after:
+  0`. Every prior run tracked the live skill count in `before`/`after` instead
+  (10-16: checked 72, archived 1, before/after 71/71; 10-09, 10-02, 09-25: checked 72,
+  archived 0, before/after 72/72 each) — so a `0/0` here means the curator's own count
+  of existing skills read as **empty** at the moment it ran its auto-transition pass,
+  and every one of the 71 skills it checked looked orphaned and got archived. This is
+  a **registry-read failure in the curator itself**, a different failure mode from
+  the invocation-driven staleness mechanism tracked elsewhere in this section (that
+  one ages individual skills toward `stale`/`archived` on real last-used data; this
+  one archived everything at once because its own count of "what exists" came back
+  zero). **Not yet destructive:** `~/agents/skills` has these as uncommitted
+  working-tree deletions on top of `nightly-2026-10-22` (last real commit 2026-10-22
+  03:04:16 -0400, nothing pushed since), and a full pre-run backup exists —
+  `.curator_backups/2026-10-23T21-55-33Z/skills.tar.gz` (98 files) — plus `hermes
+  curator restore <name>` as documented in the run's own `REPORT.md`. Left for
+  Everett: restore vs. accept vs. root-cause why the registry read came back empty.
+  Full evidence: `pipelines/nightly-reflection/01_survey/output/findings-2026-10-24.md`.
 - **Where its artifacts land:** report + machine record at
   `~/.hermes/logs/curator/<ts>/{REPORT.md,run.json}`; state at
   `~/agents/skills/.curator_state` (gitignored); usage sidecar at
